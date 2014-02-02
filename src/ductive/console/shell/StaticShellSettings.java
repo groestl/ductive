@@ -31,20 +31,17 @@ public class StaticShellSettings implements ShellSettings {
 
 	private Provider<Ansi> prompt;
 	private Completer completer;
+	private ShellHistory history;
 
-	public StaticShellSettings(Provider<Ansi> prompt, Completer completer) {
+	public StaticShellSettings(final Ansi prompt, Completer completer, ShellHistory history) {
+		this(new Provider<Ansi>() { @Override public Ansi get() { 	return prompt;	} },completer,history);
+	}
+
+	public StaticShellSettings(Provider<Ansi> prompt, Completer completer, ShellHistory history) {
 		this.prompt = prompt;
 		this.completer = completer;
+		this.history = history;
 	}
-	
-
-	public StaticShellSettings(final Ansi prompt, Completer completer) {
-		this.completer = completer;
-		this.prompt = new Provider<Ansi>() {
-			@Override public Ansi get() { 	return prompt;	}
-		};
-	}
-	
 	
 	@Override public Completer completer() {
 		return completer;
@@ -52,6 +49,10 @@ public class StaticShellSettings implements ShellSettings {
 	
 	@Override public Provider<Ansi> prompt() {
 		return prompt;
+	}
+	
+	@Override public ShellHistory history() {
+		return history;
 	}
 
 }

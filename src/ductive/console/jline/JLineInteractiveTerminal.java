@@ -39,6 +39,7 @@ import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Color;
 
 import ductive.console.shell.InteractiveTerminal;
+import ductive.console.shell.ShellHistory;
 import ductive.console.shell.ShellSettings;
 
 public class JLineInteractiveTerminal implements InteractiveTerminal {
@@ -136,6 +137,14 @@ public class JLineInteractiveTerminal implements InteractiveTerminal {
 	@Override
 	public void updateSettings(ShellSettings settings) {
 		this.currentSettings = settings;
+		ShellHistory history = settings.history();
+		if(history!=null) {
+			jline.setHistoryEnabled(true);
+			jline.setHistory(history.history());
+		} else {
+			jline.setHistoryEnabled(false);
+			jline.setHistory(null);
+		}
 	}
 	
 	@Override

@@ -21,18 +21,13 @@
  */
 package ductive.console.shell;
 
-import javax.inject.Provider;
+import jline.console.history.History;
 
-import jline.console.completer.Completer;
 
-import org.fusesource.jansi.Ansi;
+public interface ShellHistory extends AutoCloseable {
+	
+	void close();
 
-public interface ShellSettings {
-
-	Completer completer();
-
-	Provider<Ansi> prompt();
-
-	ShellHistory history();
+	History history();
 
 }

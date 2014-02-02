@@ -23,6 +23,10 @@ package ductive.console.commands.lib;
 
 import java.io.IOException;
 
+import javax.inject.Provider;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ductive.console.commands.register.annotations.Cmd;
 import ductive.console.shell.EmbeddedGroovyShell;
 import ductive.console.shell.InteractiveTerminal;
@@ -31,9 +35,11 @@ import ductive.console.shell.ShellUtils;
 
 public class GroovyCommands {
 	
+	@Autowired private Provider<EmbeddedGroovyShell> shellProvider; 
+	
 	@Cmd(path={"gsh"},help="spawns a groovy interactive shell")
 	public void groovyShell(InteractiveTerminal terminal) throws IOException {
-		ShellUtils.nestedShell(terminal,new EmbeddedGroovyShell());
+		ShellUtils.nestedShell(terminal,shellProvider.get());
 	}
 
 }

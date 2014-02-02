@@ -25,24 +25,28 @@ package ductive.console.shell;
 import java.io.IOException;
 import java.io.PrintStream;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.groovy.runtime.InvokerInvocationException;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Color;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ductive.commons.Names;
 import ductive.console.commands.parser.CmdParser;
 import ductive.console.commands.parser.CmdParserBuilder;
 import ductive.console.commands.parser.model.CommandLine;
 import ductive.console.commands.register.CommandContext;
 import ductive.console.commands.register.CommandInvoker;
 import ductive.console.commands.register.CommandRegistry;
-import ductive.parse.Parser;
 import ductive.parse.errors.NoMatchException;
 
 public class EmbeddedAppShell implements Shell {
 
 	private static final Ansi DEFAULT_STANDARD_PROMPT = new Ansi().reset().bold().fg(Color.MAGENTA).a("app> ").reset();
+
+	private static final String HISTORY_KEY = Names.from(EmbeddedAppShell.class,"history");
 
 	private Ansi standardPrompt = DEFAULT_STANDARD_PROMPT;
 
@@ -50,45 +54,55 @@ public class EmbeddedAppShell implements Shell {
 
 	@Autowired private CommandInvoker commandInvoker;
 	@Autowired private CmdParserBuilder cmdParserBuilder;
+	@Autowired private HistoryProvider historyProvider;
+	
+	private CmdParser cmdParser;
+	
+	@PostConstruct
+	public void init() {
+		cmdParser = new CmdParser(cmdParserBuilder.buildParser(commandRegistry.commands()));
+	}
 
 	@Override
 	public void execute(InteractiveTerminal terminal) throws IOException {
-
-		Parser<CommandLine> parser = cmdParserBuilder.buildParser(commandRegistry.commands());
-		
-		CmdParser cmdParser = new CmdParser(parser);
-
-		ShellSettings settings = new StaticShellSettings(standardPrompt,cmdParser);
-
-		terminal.updateSettings(settings);
-
-		while (true) {
-			String command = terminal.readLine();
-			if (command == null)
-				break;
-
-			if (StringUtils.isBlank(command))
-				continue;
-
-			try {
-				try {
-					CommandLine line = cmdParser.parse(command);
-					//terminal.println(line.toString());
-					commandInvoker.execute(new CommandContext(terminal),line);
-				} catch(NoMatchException e) {
-					terminal.errorln(e.getMessage());
-				}
-			} catch (Throwable e) {
-				// Unroll invoker exceptions
-				if (e instanceof InvokerInvocationException) {
-					e = e.getCause();
-				}
-
-				PrintStream ps = new PrintStream(terminal.error());
-				e.printStackTrace(ps);
-				ps.flush();
+		try( ShellHistory history = historyProvider.history(HISTORY_KEY) ) {
+			ShellSettings settings = new StaticShellSettings(standardPrompt,cmdParser,history);
+			terminal.updateSettings(settings);
+			
+			while (true) {
+				Integer result = execute(terminal,terminal.readLine());
+				if(result != null)
+					break;
 			}
 		}
+	}
+
+	private Integer execute(InteractiveTerminal terminal, String command) throws IOException {
+		if (command == null)
+			return 0;
+
+		if (StringUtils.isBlank(command))
+			return null;
+
+		try {
+			try {
+				CommandLine line = cmdParser.parse(command);
+				//terminal.println(line.toString());
+				commandInvoker.execute(new CommandContext(terminal),line);
+			} catch(NoMatchException e) {
+				terminal.errorln(e.getMessage());
+			}
+		} catch (Throwable e) {
+			// Unroll invoker exceptions
+			if (e instanceof InvokerInvocationException) {
+				e = e.getCause();
+			}
+
+			PrintStream ps = new PrintStream(terminal.error());
+			e.printStackTrace(ps);
+			ps.flush();
+		}
+		return null;
 	}
 
 	public void setCommandRegistry(CommandRegistry commandRegistry) {

@@ -43,5 +43,9 @@ public class DefaultTerminalSettings implements ShellSettings {
 	@Override public Provider<Ansi> prompt() {
 		return DEFAULT_PROMPT;
 	}
+	
+	@Override public ShellHistory history() {
+		return null;
+	}
 
 }

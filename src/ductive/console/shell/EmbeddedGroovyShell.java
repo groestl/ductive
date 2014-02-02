@@ -36,7 +36,9 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.InvokerInvocationException;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Color;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import ductive.commons.Names;
 import ductive.console.groovy.GroovyInterpreter;
 import ductive.console.groovy.ReflectionCompleter;
 
@@ -46,9 +48,13 @@ public class EmbeddedGroovyShell implements Shell {
 	private static final Ansi DEFAULT_PENDING_PROMPT = new Ansi().reset().fgBright(Color.BLUE).a("...> ").reset();
 	private static final Ansi DEFAULT_RESULT_MARKER = new Ansi().reset().fg(Color.GREEN).a("==>").fgBright(Color.GREEN).a(" %s").reset();
 	
+	private static final String HISTORY_KEY = Names.from(EmbeddedGroovyShell.class,"history");
+	
 	private Ansi standardPrompt = DEFAULT_STANDARD_PROMPT;
 	private Ansi pendingPrompt = DEFAULT_PENDING_PROMPT;
 	private Ansi resultMarker = DEFAULT_RESULT_MARKER;
+	
+	@Autowired private HistoryProvider historyProvider;
 
 	@Override
 	public void execute(InteractiveTerminal terminal) throws IOException {
@@ -60,40 +66,42 @@ public class EmbeddedGroovyShell implements Shell {
 		// binding.setProperty("in",new BufferedReader(new InputStreamReader(terminal.input()))); FIXME:
 		GroovyInterpreter interpreter = new GroovyInterpreter(binding,config);
 
-		final AtomicBoolean pending = new AtomicBoolean(false);
-		ShellSettings settings = new StaticShellSettings(new Provider<Ansi>() {
-			@Override public Ansi get() {
-				return pending.get() ? pendingPrompt : standardPrompt;
-			}
-		},new ReflectionCompleter(interpreter));
-		terminal.updateSettings(settings);
-
-		while (true) {
-			String code = new CodeReader(terminal,pending).read();
-			if (code == null) {
-				terminal.println("");
-				break;
-			}
-
-			if (StringUtils.isBlank(code))
-				continue;
-
-			try {
-				Object result = interpreter.interpret("true\n" + code); // i don't know why dummy 'true' is required...
-				terminal.println(String.format(resultMarker.toString(),result));
-//			} catch (CompilationFailedException e) {
-//				//terminal.error(e.toString());
-//				filterAndPrintStackTrace(e);
-			} catch (Throwable e) {
-				// Unroll invoker exceptions
-				if (e instanceof InvokerInvocationException) {
-					e = e.getCause();
+		try(ShellHistory history = historyProvider.history(HISTORY_KEY)) {
+			
+			final AtomicBoolean pending = new AtomicBoolean(false);
+			ShellSettings settings = new StaticShellSettings(new Provider<Ansi>() {
+				@Override public Ansi get() { return pending.get() ? pendingPrompt : standardPrompt; }
+			},new ReflectionCompleter(interpreter),history);
+			terminal.updateSettings(settings);
+	
+			while (true) {
+				String code = new CodeReader(terminal,pending).read();
+				if (code == null) {
+					terminal.println("");
+					break;
 				}
-
-				PrintStream ps = new PrintStream(terminal.error());
-				e.printStackTrace(ps);
-				ps.flush();
+	
+				if (StringUtils.isBlank(code))
+					continue;
+	
+				try {
+					Object result = interpreter.interpret("true\n" + code); // i don't know why dummy 'true' is required...
+					terminal.println(String.format(resultMarker.toString(),result));
+	//			} catch (CompilationFailedException e) {
+	//				//terminal.error(e.toString());
+	//				filterAndPrintStackTrace(e);
+				} catch (Throwable e) {
+					// Unroll invoker exceptions
+					if (e instanceof InvokerInvocationException) {
+						e = e.getCause();
+					}
+	
+					PrintStream ps = new PrintStream(terminal.error());
+					e.printStackTrace(ps);
+					ps.flush();
+				}
 			}
+			
 		}
 	}
 

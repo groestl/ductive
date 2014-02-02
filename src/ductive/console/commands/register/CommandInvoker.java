@@ -98,11 +98,10 @@ public class CommandInvoker {
 			
 			Validate.isTrue(aidx==paramTypes.length);
 			
-			target.method.invoke(target.bean,args);
+			return target.method.invoke(target.bean,args);
 		} catch(Exception e) {
 			throw Throwables.propagate(e);
 		}
-		return null;
 	}
 
 

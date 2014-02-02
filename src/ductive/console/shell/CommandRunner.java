@@ -80,7 +80,9 @@ public class CommandRunner implements Command {
 					CommandContext commandCtx = new CommandContext(terminal);
 					try {
 						CommandLine line = cmdParser.parse(commandLine);
-						commandInvoker.execute(commandCtx,line);
+						Object result = commandInvoker.execute(commandCtx,line);
+						if( result != null )
+							exitCode.set(Number.class.cast(result).intValue());
 					} catch(Exception x) {
 						try(PrintStream p = new PrintStream(terminal.error())) {
 							x.printStackTrace(p);

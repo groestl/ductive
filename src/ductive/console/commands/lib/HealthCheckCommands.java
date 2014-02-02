@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.commons.lang3.StringUtils;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Color;
@@ -52,7 +54,6 @@ public class HealthCheckCommands {
 	private static final Logger log = LoggerFactory.getLogger(HealthCheckCommands.class);
 	
 	@Autowired private HealthCheckRegistry healthChecks;
-
 	
 	@Cmd(path={"app","health","list"},help="run health checks")
 	public void list(Terminal term) throws IOException {
@@ -61,7 +62,7 @@ public class HealthCheckCommands {
 	}
 
 	@Cmd(path={"app","health","check"},help="run health checks")
-	public void runHealthcheck(Terminal term, @Arg(value="pattern",optional=true) String pattern, @Opt(value="details") boolean details) throws IOException {
+	public int runHealthcheck(Terminal term, @Arg(value="pattern",optional=true) String pattern, @Opt(value="details") boolean details) throws IOException {
 		final Map<String,Result> results;
 		
 		if( StringUtils.isBlank(pattern) ) {
@@ -73,6 +74,15 @@ public class HealthCheckCommands {
 			results = selectiveHealthChecks(pattern);
 		
 		display(term,results,details);
+		
+		return isHealthy(results) ? 0 : 1;
+	}
+
+	private boolean isHealthy(Map<String,Result> results) {
+		for(Entry<String,Result> e : results.entrySet())
+			if(!e.getValue().isHealthy())
+				return false;
+		return true;
 	}
 
 	private Map<String,Result> selectiveHealthChecks(String pattern) {

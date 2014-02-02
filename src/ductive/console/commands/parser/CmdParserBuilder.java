@@ -119,9 +119,17 @@ public class CmdParserBuilder {
 		ArgParserRegistration registration = argParserRegistry.find(arg.type,StringUtils.defaultIfEmpty(arg.parserQualifier,null));
 		if(registration!=null)
 			return argParserFactory.create(registration);
-		if(String.class.isAssignableFrom(arg.type))
+		
+		if(arg.type.isArray())
+			return fallbackArgValueParser(arg,arg.type.getComponentType());
+
+		return fallbackArgValueParser(arg,arg.type);
+	}
+	
+	private Parser<?> fallbackArgValueParser(ArgumentType arg, Class<?> clazz) {
+		if(String.class.isAssignableFrom(clazz))
 			return Parsers.NON_WHITESPACE;
-		throw new UnsupportedOperationException(String.format("cannot build argument parser for argument %s",arg));
+		throw new UnsupportedOperationException(String.format("cannot build argument parser for argument %s (target type %s)",arg,clazz));
 	}
 
 	private static Parser<List<String>> path(String... path) {

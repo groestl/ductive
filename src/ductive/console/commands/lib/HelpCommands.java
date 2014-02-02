@@ -69,7 +69,7 @@ public class HelpCommands {
 			
 		for(ArgumentType arg : arguments) {
 			if(arg.type.isArray())
-				a = a.fgBright(Color.YELLOW).a(" {--").a(arg.name).a("=}");
+				a = a.fgBright(Color.YELLOW).a(" [--").a(arg.name).a("=]*");
 			else if(arg.optional)
 				a = a.fgBright(Color.YELLOW).a(" [--").a(arg.name).a("=]");
 			else

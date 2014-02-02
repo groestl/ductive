@@ -21,13 +21,14 @@
  */
 package ductive.console.shell;
 
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.concurrent.Executor;
+import java.io.PrintStream;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.sshd.server.Command;
 import org.apache.sshd.server.Environment;
@@ -35,30 +36,66 @@ import org.apache.sshd.server.ExitCallback;
 
 import com.google.common.base.Throwables;
 
-import ductive.console.jline.JLineConsoleReader;
-import ductive.console.jline.JLineInteractiveTerminal;
-import ductive.console.sshd.SshTerminal;
+import ductive.console.commands.parser.CmdParser;
+import ductive.console.commands.parser.model.CommandLine;
+import ductive.console.commands.register.CommandContext;
+import ductive.console.commands.register.CommandInvoker;
+import ductive.console.jline.NonInteractiveTerminal;
 import ductive.log.LogContext;
 
-public class EmbeddedShellRunner implements Command {
+public class CommandRunner implements Command {
+	
+	private CmdParser cmdParser;
+	private CommandInvoker commandInvoker;
+	private String commandLine;
 
-	private final Executor executor;
-
-	private OutputStream err;
-	private InputStream in;
 	private OutputStream out;
-
+	private OutputStream err;
+	private ExitCallback callback;
+	private InputStream in;
+	
 	private boolean closed;
 
-	private ExitCallback callback;
-
-	private Shell shell;
+	private AtomicInteger exitCode = new AtomicInteger(0);
+	private ExecutorService executor;
 	
-	public EmbeddedShellRunner(Shell shell) {
+	
+	
+	public CommandRunner(CmdParser cmdParser, CommandInvoker commandInvoker, String commandLine) {
+		this.commandInvoker = commandInvoker;
 		executor = Executors.newSingleThreadExecutor();
-		this.shell = shell;
+		this.cmdParser = cmdParser;
+		this.commandLine = commandLine;
 	}
 
+	@Override
+	public void start(final Environment env) throws IOException {
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				try(LogContext ctx = new LogContext("remote-exec")) {
+					ctx.put("user",env.getEnv().get(Environment.ENV_USER));
+					
+					NonInteractiveTerminal terminal = new NonInteractiveTerminal(out);
+					CommandContext commandCtx = new CommandContext(terminal);
+					try {
+						CommandLine line = cmdParser.parse(commandLine);
+						commandInvoker.execute(commandCtx,line);
+					} catch(Exception x) {
+						try(PrintStream p = new PrintStream(terminal.error())) {
+							x.printStackTrace(p);
+						}
+						exitCode.set(1);
+					}
+					
+					destroy();
+				} catch (Exception e) {
+					throw Throwables.propagate(e);
+				}
+			}
+		});
+	}
+	
 	@Override
 	public void setErrorStream(OutputStream err) {
 		this.err = err;
@@ -80,34 +117,12 @@ public class EmbeddedShellRunner implements Command {
 	}
 
 	@Override
-	public void start(final Environment env) throws IOException {
-		executor.execute(new Runnable() {
-			@Override
-			public void run() {
-				try(LogContext ctx = new LogContext("remote-shell")) {
-					ctx.put("user",env.getEnv().get(Environment.ENV_USER));
-					
-					JLineConsoleReader r = new JLineConsoleReader(in,out,new SshTerminal(env));
-					r.setExpandEvents(false);
-					JLineInteractiveTerminal terminal = new JLineInteractiveTerminal(r,DefaultTerminalSettings.INSTANCE);
-	
-					shell.execute(terminal);
-					
-					destroy();
-				} catch (Exception e) {
-					throw Throwables.propagate(e);
-				}
-			}
-		});
-	}
-
-	@Override
 	public void destroy() {
 		if (!closed) {
 			closed = true;
 			flush(out, err);
 			close(in, out, err);
-			callback.onExit(0);
+			callback.onExit(exitCode.get());
 		}
 	}
 
@@ -126,5 +141,4 @@ public class EmbeddedShellRunner implements Command {
 			} catch (IOException e) { /* noop */ 	}
 		}
 	}
-
 }

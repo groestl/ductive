@@ -39,6 +39,9 @@ public class SshTerminal extends TerminalSupport implements SignalListener {
 	
 	private static final Log log = LogFactory.getLog(SshTerminal.class);
 
+	private static final int DEFAULT_WIDTH = 80;
+	private static final int DEFAULT_HEIGHT = 25;
+	
 	private Environment env;
 	private int height;
 	private int width;
@@ -69,7 +72,8 @@ public class SshTerminal extends TerminalSupport implements SignalListener {
 
 	@Override
 	public OutputStream wrapOutIfNeeded(OutputStream out) {
-		if(env.getPtyModes().get(PtyMode.ONLCR)!=0)
+		Integer n = env.getPtyModes().get(PtyMode.ONLCR);
+		if(n==null || n!=0)
 			return new NL2CRNLOutputStream(out);
 		return out;
 	}
@@ -85,9 +89,12 @@ public class SshTerminal extends TerminalSupport implements SignalListener {
 	
 	private void updateSize() {
 		Map<String,String> e = env.getEnv();
-		width = Integer.parseInt(e.get(Environment.ENV_COLUMNS));
-		height = Integer.parseInt(e.get(Environment.ENV_LINES));
+		
+		String w = e.get(Environment.ENV_COLUMNS);
+		width = w!=null ? Integer.parseInt(w) : DEFAULT_WIDTH;
+		
+		String h = e.get(Environment.ENV_LINES);
+		height = h!=null ? Integer.parseInt(h) : DEFAULT_HEIGHT;
 	}
-
 
 }

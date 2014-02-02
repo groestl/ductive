@@ -23,6 +23,7 @@ package ductive.console.commands.lib;
 
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
@@ -38,8 +39,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
-import com.google.common.base.Throwables;
 
+import ductive.commons.SleepUtils;
 import ductive.console.commands.register.annotations.Arg;
 import ductive.console.commands.register.annotations.ArgParser;
 import ductive.console.commands.register.annotations.Cmd;
@@ -107,9 +108,14 @@ public class LogCommands {
 					if( c==CR ) {
 						terminal.println("");
 						terminal.flush();
-					} else if(c==CTRL_C || c==CTRL_D || c=='q' || c=='Q' )
+					} else if(c==CTRL_C || c==CTRL_D || c=='q' || c=='Q' || appender.hasIoErrors() )
 						break;
 				}
+			} else {
+				terminal.println(new Ansi().fgBright(Color.WHITE).bold().a(String.format("---- catching %s on logger %s ----",level,logger.getName())).reset());
+				terminal.flush();
+				while(!appender.hasIoErrors())
+					SleepUtils.sleep(100);
 			}
 		} finally {
 			logger.removeAppender(appender);
@@ -122,6 +128,7 @@ public class LogCommands {
 		
 		private Terminal terminal;
 		private Layout layout;
+		private AtomicBoolean hasIoErrors = new AtomicBoolean(false);
 		
 		public RemoteTerminalAppender(Layout layout, Terminal terminal) {
 			this.layout = layout;
@@ -134,8 +141,13 @@ public class LogCommands {
 				terminal.print(formatAnsi(new Ansi(),ev.getLevel()).a(msg).reset().toString());
 				terminal.flush();
 			} catch (IOException e) {
-				throw Throwables.propagate(e);
+				hasIoErrors.set(true);
+				//throw Throwables.propagate(e);
 			}
+		}
+		
+		public boolean hasIoErrors() {
+			return hasIoErrors.get();
 		}
 		
 		private static Ansi formatAnsi(Ansi a, Level level) {

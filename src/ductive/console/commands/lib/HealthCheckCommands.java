@@ -30,8 +30,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import javax.annotation.PostConstruct;
-
 import org.apache.commons.lang3.StringUtils;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Color;

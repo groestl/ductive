@@ -78,6 +78,7 @@ dependencies {
 	compile group: 'org.eclipse.jetty.websocket', name: 'websocket-server', version: "$jettyVersion"
 	compile group: 'org.eclipse.jetty', name: 'jetty-util', version: "$jettyVersion"
 
+	compile group: 'com.codahale.metrics', name: 'metrics-jetty9', version: "3.0.1"
 	compile ( "com.ryantenney.metrics:metrics-spring:3.0.0-RC4" ) {
 		exclude group: 'org.springframework'
 		exclude group: 'org.codehaus.jackson'

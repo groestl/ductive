@@ -37,7 +37,15 @@ public class InMemoryHistoryProvider implements HistoryProvider {
 	
 	private void saveHistory(String historyKey, History sessionHistory) {
 		synchronized (monitor) {
-			data.put(historyKey,sessionHistory);
+			History history = data.get(historyKey);
+			if(history==null)
+				data.put(historyKey,history=new MemoryHistory());
+				
+			ListIterator<Entry> it = sessionHistory.entries();
+			while(it.hasNext()) {
+				Entry e = it.next();
+				history.add(e.value());
+			}
 		}
 	}
 	

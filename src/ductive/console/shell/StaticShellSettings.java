@@ -1,0 +1,57 @@
+/*
+ 	Copyright (c) 2014 code.fm
+ 	
+	Permission is hereby granted, free of charge, to any person obtaining a copy
+	of this software and associated documentation files (the "Software"), to deal
+	in the Software without restriction, including without limitation the rights
+	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+	copies of the Software, and to permit persons to whom the Software is
+	furnished to do so, subject to the following conditions:
+	
+	The above copyright notice and this permission notice shall be included in all
+	copies or substantial portions of the Software.
+	
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+	SOFTWARE.
+ */
+package ductive.console.shell;
+
+import javax.inject.Provider;
+
+import jline.console.completer.Completer;
+
+import org.fusesource.jansi.Ansi;
+
+public class StaticShellSettings implements ShellSettings {
+
+	private Provider<Ansi> prompt;
+	private Completer completer;
+
+	public StaticShellSettings(Provider<Ansi> prompt, Completer completer) {
+		this.prompt = prompt;
+		this.completer = completer;
+	}
+	
+
+	public StaticShellSettings(final Ansi prompt, Completer completer) {
+		this.completer = completer;
+		this.prompt = new Provider<Ansi>() {
+			@Override public Ansi get() { 	return prompt;	}
+		};
+	}
+	
+	
+	@Override public Completer completer() {
+		return completer;
+	}
+	
+	@Override public Provider<Ansi> prompt() {
+		return prompt;
+	}
+
+}

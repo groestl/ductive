@@ -1,16 +1,16 @@
 /*
  	Copyright (c) 2014 code.fm
- 	
+
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal
 	in the Software without restriction, including without limitation the rights
 	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 	copies of the Software, and to permit persons to whom the Software is
 	furnished to do so, subject to the following conditions:
-	
+
 	The above copyright notice and this permission notice shall be included in all
 	copies or substantial portions of the Software.
-	
+
 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.commons.lang3.Validate;
 
 import com.google.common.base.Function;
 
@@ -37,7 +37,7 @@ import ductive.console.commands.parser.model.CommandLine;
 import ductive.console.commands.parser.model.Option;
 import ductive.console.commands.parser.model.Parameter;
 import ductive.console.commands.register.ArgParserRegistry;
-import ductive.console.commands.register.ArgParserRegistry.ArgParserRegistration;
+import ductive.console.commands.register.DefaultArgParserRegistry.ArgParserRegistration;
 import ductive.console.commands.register.model.ArgumentType;
 import ductive.console.commands.register.model.CommandType;
 import ductive.console.commands.register.model.OptionType;
@@ -47,20 +47,19 @@ import ductive.parse.Parsers;
 import ductive.parse.Tuple;
 
 public class CmdParserBuilder {
-	
+
 	private static final List<Parameter> EMPTY_PARAM_LIST = new ArrayList<Parameter>();
-	
-	@Autowired private ArgParserRegistry argParserRegistry;
-	@Autowired private ArgParserFactory argParserFactory;
-	
-	
+
+	private ArgParserRegistry argParserRegistry;
+	private ArgParserFactory argParserFactory;
+
+
 	public Parser<CommandLine> buildParser(List<CommandType> commands) {
 		Parser<CommandLine>[] p = null;
 		for(CommandType c : commands)
 			p = ArrayUtils.add(p,parser(c));
 
-		if(ArrayUtils.isEmpty(p))
-			return null;
+		Validate.isTrue(!ArrayUtils.isEmpty(p),"no commands defined");
 
 		return Parsers.or(p);
 	}
@@ -114,18 +113,18 @@ public class CmdParserBuilder {
 			});
 	}
 
-	
+
 	private Parser<?> argValueParser(ArgumentType arg) {
 		ArgParserRegistration registration = argParserRegistry.find(arg.type,StringUtils.defaultIfEmpty(arg.parserQualifier,null));
 		if(registration!=null)
 			return argParserFactory.create(registration);
-		
+
 		if(arg.type.isArray())
 			return fallbackArgValueParser(arg,arg.type.getComponentType());
 
 		return fallbackArgValueParser(arg,arg.type);
 	}
-	
+
 	private Parser<?> fallbackArgValueParser(ArgumentType arg, Class<?> clazz) {
 		if(String.class.isAssignableFrom(clazz))
 			return Parsers.NON_WHITESPACE;
@@ -158,11 +157,13 @@ public class CmdParserBuilder {
 
 	}
 
-	
+
 	public void setArgParserRegistry(ArgParserRegistry argParserRegistry) {
 		this.argParserRegistry = argParserRegistry;
 	}
 
-	
+	public void setArgParserFactory(ArgParserFactory argParserFactory) {
+		this.argParserFactory = argParserFactory;
+	}
 
 }

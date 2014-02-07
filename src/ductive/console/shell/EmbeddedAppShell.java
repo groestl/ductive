@@ -1,16 +1,16 @@
 /*
  	Copyright (c) 2014 code.fm
- 	
+
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal
 	in the Software without restriction, including without limitation the rights
 	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 	copies of the Software, and to permit persons to whom the Software is
 	furnished to do so, subject to the following conditions:
-	
+
 	The above copyright notice and this permission notice shall be included in all
 	copies or substantial portions of the Software.
-	
+
 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,21 +25,18 @@ package ductive.console.shell;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import javax.annotation.PostConstruct;
+import javax.inject.Provider;
 
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.groovy.runtime.InvokerInvocationException;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Color;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import ductive.commons.Names;
 import ductive.console.commands.parser.CmdParser;
-import ductive.console.commands.parser.CmdParserBuilder;
 import ductive.console.commands.parser.model.CommandLine;
 import ductive.console.commands.register.CommandContext;
 import ductive.console.commands.register.CommandInvoker;
-import ductive.console.commands.register.CommandRegistry;
 import ductive.parse.errors.NoMatchException;
 
 public class EmbeddedAppShell implements Shell {
@@ -50,34 +47,26 @@ public class EmbeddedAppShell implements Shell {
 
 	private Ansi standardPrompt = DEFAULT_STANDARD_PROMPT;
 
-	private CommandRegistry commandRegistry;
-
-	@Autowired private CommandInvoker commandInvoker;
-	@Autowired private CmdParserBuilder cmdParserBuilder;
-	@Autowired private HistoryProvider historyProvider;
-	
-	private CmdParser cmdParser;
-	
-	@PostConstruct
-	public void init() {
-		cmdParser = new CmdParser(cmdParserBuilder.buildParser(commandRegistry.commands()));
-	}
+	private CommandInvoker commandInvoker;
+	private HistoryProvider historyProvider;
+	private Provider<CmdParser> cmdParserProvider;
 
 	@Override
 	public void execute(InteractiveTerminal terminal) throws IOException {
+		CmdParser cmdParser = cmdParserProvider.get();
 		try( ShellHistory history = historyProvider.history(HISTORY_KEY) ) {
 			ShellSettings settings = new StaticShellSettings(standardPrompt,cmdParser,history);
 			terminal.updateSettings(settings);
-			
+
 			while (true) {
-				Integer result = execute(terminal,terminal.readLine());
+				Integer result = execute(cmdParser,terminal,terminal.readLine());
 				if(result != null)
 					break;
 			}
 		}
 	}
 
-	private Integer execute(InteractiveTerminal terminal, String command) throws IOException {
+	private Integer execute(CmdParser cmdParser, InteractiveTerminal terminal, String command) throws IOException {
 		if (command == null)
 			return 0;
 
@@ -105,8 +94,16 @@ public class EmbeddedAppShell implements Shell {
 		return null;
 	}
 
-	public void setCommandRegistry(CommandRegistry commandRegistry) {
-		this.commandRegistry = commandRegistry;
+	public void setCmdParserProvider(Provider<CmdParser> cmdParserProvider) {
+		this.cmdParserProvider = cmdParserProvider;
+	}
+
+	public void setCommandInvoker(CommandInvoker commandInvoker) {
+		this.commandInvoker = commandInvoker;
+	}
+
+	public void setHistoryProvider(HistoryProvider historyProvider) {
+		this.historyProvider = historyProvider;
 	}
 
 }

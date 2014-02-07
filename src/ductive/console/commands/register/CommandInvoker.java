@@ -1,16 +1,16 @@
 /*
  	Copyright (c) 2014 code.fm
- 	
+
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal
 	in the Software without restriction, including without limitation the rights
 	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 	copies of the Software, and to permit persons to whom the Software is
 	furnished to do so, subject to the following conditions:
-	
+
 	The above copyright notice and this permission notice shall be included in all
 	copies or substantial portions of the Software.
-	
+
 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -77,27 +77,27 @@ public class CommandInvoker {
 	protected Object execute(CommandContext ctx, MethodCommandTarget target, ParameterType[] paramTypes, List<Parameter> params) {
 		try {
 			Preprocessed pp = preprocess(params);
-			
+
 			Class<?>[] parameters = target.method.getParameterTypes();
 			Object[] args = new Object[parameters.length];
 			int aidx=0;
 			for(int i=0;i<parameters.length;++i) {
 				Class<?> param = parameters[i];
-				
+
 				if(Terminal.class.isAssignableFrom(param)) {
 					if(!param.isInstance(ctx.terminal))
 						throw new RuntimeException(String.format("method '%s' does not support terminal '%s'",target.method,ctx.terminal));
-					
+
 					args[i] = ctx.terminal;
 					continue;
 				}
-				
+
 				ParameterType t = paramTypes[aidx++];
 				args[i] = handleParam(pp,t);
 			}
-			
+
 			Validate.isTrue(aidx==paramTypes.length);
-			
+
 			return target.method.invoke(target.bean,args);
 		} catch(Exception e) {
 			throw Throwables.propagate(e);
@@ -115,7 +115,7 @@ public class CommandInvoker {
 
 	protected Object handleArgument(Preprocessed pp, ArgumentType t) {
 		List<Object> v_ = pp.argumentValues.get(t.name);
-		
+
 		if( v_==null && !t.optional)
 			throw new RuntimeException(String.format("argument '%s' is not optional",t.name));
 
@@ -125,10 +125,10 @@ public class CommandInvoker {
 		if(!t.type.isArray()) {
 			if( v_.size()>1 )
 				throw new RuntimeException(String.format("too many occurrences of argument '%s': is not an array",t.name));
-			
+
 			return conversionService.convert(v_.get(0),t.type);
-		} 
-		
+		}
+
 		return conversionService.convert(v_.toArray(ArrayUtils.EMPTY_OBJECT_ARRAY),t.type);
 	}
 
@@ -139,7 +139,7 @@ public class CommandInvoker {
 	private Preprocessed preprocess(List<Parameter> params) {
 		final Map<String,List<Object>> argumentValues = new HashMap<>();
 		final Set<String> options = new HashSet<String>();
-		
+
 		for(Parameter a : params) {
 			a.visit(new Parameter.Visitor<Void>() {
 				@Override public Void accept(Argument a) {
@@ -151,18 +151,18 @@ public class CommandInvoker {
 				}
 				@Override public Void accept(Option option) {
 					options.add(option.name);
-					return null; 
+					return null;
 				}
 			});
 		}
-		
+
 		return new Preprocessed(argumentValues,options);
 	}
-	
+
 	private static class Preprocessed {
 		Map<String,List<Object>> argumentValues;
 		Set<String> options;
-		
+
 		public Preprocessed(Map<String, List<Object>> argumentValues, Set<String> options) {
 			this.argumentValues = argumentValues;
 			this.options = options;
@@ -172,6 +172,10 @@ public class CommandInvoker {
 
 	public void setCommandRegistry(CommandRegistry commandRegistry) {
 		this.commandRegistry = commandRegistry;
+	}
+
+	public void setConversionService(ConversionService conversionService) {
+		this.conversionService = conversionService;
 	}
 
 }

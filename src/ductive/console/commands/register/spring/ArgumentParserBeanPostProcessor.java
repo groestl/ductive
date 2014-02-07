@@ -1,16 +1,16 @@
 /*
  	Copyright (c) 2014 code.fm
- 	
+
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal
 	in the Software without restriction, including without limitation the rights
 	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 	copies of the Software, and to permit persons to whom the Software is
 	furnished to do so, subject to the following conditions:
-	
+
 	The above copyright notice and this permission notice shall be included in all
 	copies or substantial portions of the Software.
-	
+
 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -61,21 +61,21 @@ public class ArgumentParserBeanPostProcessor implements BeanPostProcessor {
 					return;
 
 				String qualifier = StringUtils.defaultIfEmpty(argParser.value(),null);
-				
+
 				if( !void.class.equals(argParser.bind()) ) {
 					argParserRegistry.register(argParser.bind(),qualifier,bean,method);
 					return;
-				} 
+				}
 
 				Type genericReturnType = method.getGenericReturnType();
 				Validate.isTrue(ParameterizedType.class.isInstance(genericReturnType),String.format("method %s: return type of parser generator method must be a subclass of %s<?>",method,Parser.class.getCanonicalName()));
-				
+
 				ParameterizedType pt = ParameterizedType.class.cast(genericReturnType);
 				Validate.isTrue(Parser.class.isAssignableFrom((Class<?>)pt.getRawType()),String.format("method %s: return type of parser generator method must be a subclass of %s<?>",method,Parser.class.getCanonicalName()));
-				
+
 				Type[] genericParams = pt.getActualTypeArguments();
 				Validate.isTrue(genericParams.length==1);
-				
+
 				argParserRegistry.register((Class<?>)genericParams[0],qualifier,bean,method);
 			}
 

@@ -1,16 +1,16 @@
 /*
  	Copyright (c) 2014 code.fm
- 	
+
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal
 	in the Software without restriction, including without limitation the rights
 	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 	copies of the Software, and to permit persons to whom the Software is
 	furnished to do so, subject to the following conditions:
-	
+
 	The above copyright notice and this permission notice shall be included in all
 	copies or substantial portions of the Software.
-	
+
 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -42,7 +42,7 @@ import ductive.console.shell.Terminal;
 public class HelpCommands {
 
 	@Autowired private CommandRegistry commandRegistry;
-	
+
 	@Cmd(path={"help"},help="list available commands")
 	public void help(Terminal terminal) throws IOException {
 		for(CommandType cmd : commandRegistry.commands()) {
@@ -62,11 +62,11 @@ public class HelpCommands {
 				@Override public Void accept(ArgumentType arg) { arguments.add(arg); return null;	}
 				@Override public Void accept(OptionType opt) { options.add(opt); return null; }
 			});
-		
+
 		Ansi a = new Ansi();
 		for(OptionType opt : options)
 			a = a.fg(Color.YELLOW).a(" [--").a(opt.name).a("]");
-			
+
 		for(ArgumentType arg : arguments) {
 			if(arg.type.isArray())
 				a = a.fgBright(Color.YELLOW).a(" [--").a(arg.name).a("=]*");
@@ -75,12 +75,16 @@ public class HelpCommands {
 			else
 				a = a.fgBright(Color.YELLOW).a(" --").a(arg.name).a("=");
 		}
-		
+
 		return a.reset();
 	}
 
 	private String formatPath(String[] path) {
 		return StringUtils.join(path,' ');
+	}
+
+	public void setCommandRegistry(CommandRegistry commandRegistry) {
+		this.commandRegistry = commandRegistry;
 	}
 
 }

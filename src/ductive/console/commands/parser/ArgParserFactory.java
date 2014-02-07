@@ -25,7 +25,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import com.google.common.base.Throwables;
 
-import ductive.console.commands.register.ArgParserRegistry.ArgParserRegistration;
+import ductive.console.commands.register.DefaultArgParserRegistry.ArgParserRegistration;
 import ductive.parse.Parser;
 
 public class ArgParserFactory {

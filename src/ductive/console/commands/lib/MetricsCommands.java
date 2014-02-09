@@ -27,7 +27,6 @@ import java.util.Map.Entry;
 import java.util.SortedMap;
 
 import org.fusesource.jansi.Ansi;
-import org.fusesource.jansi.Ansi.Attribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

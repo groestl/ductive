@@ -32,6 +32,8 @@ import java.util.concurrent.Executors;
 import org.apache.sshd.server.Command;
 import org.apache.sshd.server.Environment;
 import org.apache.sshd.server.ExitCallback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 
@@ -41,6 +43,8 @@ import ductive.console.sshd.SshTerminal;
 import ductive.log.LogContext;
 
 public class EmbeddedShellRunner implements Command {
+	
+	private static final Logger log = LoggerFactory.getLogger(EmbeddedShellRunner.class);
 
 	private final Executor executor;
 
@@ -95,7 +99,13 @@ public class EmbeddedShellRunner implements Command {
 					
 					destroy();
 				} catch (Exception e) {
-					throw Throwables.propagate(e);
+					if(log.isWarnEnabled())
+						log.warn(String.format("exception in remote console thread: %s",e));
+					
+					if(log.isDebugEnabled())
+						log.debug(String.format("exception in remote console thread:"),e);
+					
+					destroy();
 				}
 			}
 		});

@@ -126,9 +126,9 @@ public class CmdParserBuilder {
 	}
 
 	private Parser<?> fallbackArgValueParser(ArgumentType arg, Class<?> clazz) {
-		if(String.class.isAssignableFrom(clazz))
-			return Parsers.NON_WHITESPACE;
-		throw new UnsupportedOperationException(String.format("cannot build argument parser for argument %s (target type %s)",arg,clazz));
+		//if(String.class.isAssignableFrom(clazz))
+		return Parsers.NON_WHITESPACE;
+		//throw new UnsupportedOperationException(String.format("cannot build argument parser for argument %s (target type %s)",arg,clazz));
 	}
 
 	private static Parser<List<String>> path(String... path) {

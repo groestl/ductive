@@ -36,6 +36,8 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.InvokerInvocationException;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Color;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ductive.commons.Names;
 import ductive.console.groovy.GroovyInterpreter;
 import ductive.console.groovy.ReflectionCompleter;
@@ -52,7 +54,7 @@ public class EmbeddedGroovyShell implements Shell {
 	private Ansi pendingPrompt = DEFAULT_PENDING_PROMPT;
 	private Ansi resultMarker = DEFAULT_RESULT_MARKER;
 
-	private HistoryProvider historyProvider;
+	@Autowired private HistoryProvider historyProvider;
 
 	@Override
 	public void execute(InteractiveTerminal terminal) throws IOException {

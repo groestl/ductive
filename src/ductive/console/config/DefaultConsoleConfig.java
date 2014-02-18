@@ -1,16 +1,9 @@
 package ductive.console.config;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.inject.Provider;
 
 import org.apache.sshd.SshServer;
-import org.apache.sshd.common.NamedFactory;
-import org.apache.sshd.server.UserAuth;
-import org.apache.sshd.server.auth.UserAuthNone;
-import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,7 +24,6 @@ import ductive.console.shell.DefaultCommandFactory;
 import ductive.console.shell.DefaultShellFactory;
 import ductive.console.shell.EmbeddedAppShell;
 import ductive.console.shell.HistoryProvider;
-import ductive.console.shell.InMemoryHistoryProvider;
 
 @Configuration
 public class DefaultConsoleConfig {
@@ -39,21 +31,19 @@ public class DefaultConsoleConfig {
 	@Bean public ArgParserRegistry argParserRegistry() { return new DefaultArgParserRegistry(); }
 	@Bean public CommandRegistry commandRegistry() { return new DefaultCommandRegistry(); }
 	@Bean public ConversionService conversionService() { return new DefaultConversionService(); }
-	@Bean public HistoryProvider historyProvider() { return new InMemoryHistoryProvider(); }
 
-
-	@Bean
-	public SshServer defaultSshServerProvider() {
-		SshServer sshd = SshServer.setUpDefaultServer();
-		sshd.setHost("127.0.0.1");
-		sshd.setPort(2200);
-		sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider("hostkey.ser"));
-
-		List<NamedFactory<UserAuth>> userAuthFactories = new ArrayList<NamedFactory<UserAuth>>();
-		userAuthFactories.add(new UserAuthNone.Factory());
-		sshd.setUserAuthFactories(userAuthFactories);
-		return sshd;
-	}
+//	@Bean
+//	public SshServer defaultSshServerProvider() {
+//		SshServer sshd = SshServer.setUpDefaultServer();
+//		sshd.setHost("127.0.0.1");
+//		sshd.setPort(2200);
+//		sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider("hostkey.ser"));
+//
+//		List<NamedFactory<UserAuth>> userAuthFactories = new ArrayList<NamedFactory<UserAuth>>();
+//		userAuthFactories.add(new UserAuthNone.Factory());
+//		sshd.setUserAuthFactories(userAuthFactories);
+//		return sshd;
+//	}
 
 	@Bean
 	@Autowired

@@ -28,7 +28,6 @@ import java.io.PrintStream;
 import javax.inject.Provider;
 
 import org.apache.commons.lang3.StringUtils;
-import org.codehaus.groovy.runtime.InvokerInvocationException;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Color;
 
@@ -83,7 +82,7 @@ public class EmbeddedAppShell implements Shell {
 			}
 		} catch (Throwable e) {
 			// Unroll invoker exceptions
-			if (e instanceof InvokerInvocationException) {
+			if (e.getClass().getCanonicalName().equals("org.codehaus.groovy.runtime.InvokerInvocationException")) {
 				e = e.getCause();
 			}
 

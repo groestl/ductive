@@ -1,16 +1,16 @@
 /*
  	Copyright (c) 2014 code.fm
- 	
+
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal
 	in the Software without restriction, including without limitation the rights
 	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 	copies of the Software, and to permit persons to whom the Software is
 	furnished to do so, subject to the following conditions:
-	
+
 	The above copyright notice and this permission notice shall be included in all
 	copies or substantial portions of the Software.
-	
+
 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,6 +33,7 @@ import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.spi.LoggingEvent;
+import org.apache.log4j.spi.ThrowableInformation;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Color;
 import org.slf4j.Logger;
@@ -50,9 +51,9 @@ import ductive.parse.Parser;
 import ductive.parse.Parsers;
 
 public class LogCommands {
-	
+
 	private static final Logger log = LoggerFactory.getLogger(LogCommands.class);
-	
+
 	private static final String DEFAULT_LOG_PATTERN = "%d %5p [%c] %X{_ductive} %m%n";
 
 	private static final int CR = 13;
@@ -60,7 +61,7 @@ public class LogCommands {
 	private static final int CTRL_D = 4;
 
 	private String logPattern = DEFAULT_LOG_PATTERN;
-	
+
 	@Cmd(path={"log","set-level"},help="sets the threshold of a logger")
 	public void setLevel(Terminal terminal, @Arg(value="logger",optional=true) String loggerName, @Arg(value="level",optional=true) Level level_) throws IOException {
 		final org.apache.log4j.Logger logger;
@@ -68,9 +69,9 @@ public class LogCommands {
 			logger = org.apache.log4j.Logger.getRootLogger();
 		else
 			logger = org.apache.log4j.Logger.getLogger(loggerName);
-		
+
 		final Level level = level_!=null ? level_ : Level.TRACE;
-		
+
 		logger.setLevel(level);
 		terminal.println(new Ansi().a("logger ").bold().a(logger.getName()).boldOff().a(" set to level ").bold().a(level).boldOff());
 	}
@@ -84,27 +85,27 @@ public class LogCommands {
 			logger = org.apache.log4j.Logger.getRootLogger();
 		else
 			logger = org.apache.log4j.Logger.getLogger(loggerName);
-		
+
 		final Level level = level_!=null ? level_ : Level.TRACE;
 
 		PatternLayout layout = new PatternLayout(logPattern);
 		RemoteTerminalAppender appender = new RemoteTerminalAppender(layout,terminal);
 		appender.setThreshold(level);
-		
+
 		try {
 			if(log.isInfoEnabled())
 				log.info(String.format("terminal attached to logger %s.",logger.getName()));
-			
+
 			logger.addAppender(appender);
-		
+
 			if(InteractiveTerminal.class.isInstance(terminal)) {
 				terminal.println(new Ansi().fgBright(Color.WHITE).bold().a(String.format("---- catching %s on logger %s. press 'q', ^D or ^C to detach ----",level,logger.getName())).reset());
 				terminal.flush();
-				
+
 				InteractiveTerminal term = InteractiveTerminal.class.cast(terminal);
 				while(true) {
 					int c = term.readChar(10);
-					
+
 					if( c==CR ) {
 						terminal.println("");
 						terminal.flush();
@@ -123,33 +124,39 @@ public class LogCommands {
 				log.info(String.format("terminal detached from logger %s.",logger.getName()));
 		}
 	}
-	
+
 	private static class RemoteTerminalAppender extends AppenderSkeleton {
-		
+
 		private Terminal terminal;
 		private Layout layout;
 		private AtomicBoolean hasIoErrors = new AtomicBoolean(false);
-		
+
 		public RemoteTerminalAppender(Layout layout, Terminal terminal) {
 			this.layout = layout;
 			this.terminal = terminal;
-			
+
 		}
 		@Override protected void append(LoggingEvent ev) {
 			String msg = layout.format(ev);
 			try {
-				terminal.print(formatAnsi(new Ansi(),ev.getLevel()).a(msg).reset().toString());
+				Ansi a = formatAnsi(new Ansi(),ev.getLevel()).a(msg);
+				if(layout.ignoresThrowable()) {
+					ThrowableInformation t = ev.getThrowableInformation();
+					if(t!=null)
+						a = a.a(StringUtils.join(t.getThrowableStrRep(),'\n'));
+				}
+				terminal.print(a.reset().toString());
 				terminal.flush();
 			} catch (IOException e) {
 				hasIoErrors.set(true);
 				//throw Throwables.propagate(e);
 			}
 		}
-		
+
 		public boolean hasIoErrors() {
 			return hasIoErrors.get();
 		}
-		
+
 		private static Ansi formatAnsi(Ansi a, Level level) {
 			int n = level.toInt();
 			if(n<=Level.TRACE_INT)
@@ -167,7 +174,7 @@ public class LogCommands {
 		@Override public boolean requiresLayout() {
 			return true;
 		}
-		
+
 		@Override public void close() {
 			// NOOP
 		}

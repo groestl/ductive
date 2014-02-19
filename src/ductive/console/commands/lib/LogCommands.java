@@ -143,7 +143,7 @@ public class LogCommands {
 				if(layout.ignoresThrowable()) {
 					ThrowableInformation t = ev.getThrowableInformation();
 					if(t!=null)
-						a = a.a(StringUtils.join(t.getThrowableStrRep(),'\n'));
+						a = a.a(StringUtils.join(t.getThrowableStrRep(),'\n')).a('\n');
 				}
 				terminal.print(a.reset().toString());
 				terminal.flush();

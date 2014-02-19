@@ -2,7 +2,7 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 
 sourceCompatibility = 1.7
-version = '0.0.2'
+version = '0.0.3'
 project.ext.springVersion = '4.0.0.RC2'
 project.ext.jettyVersion = '9.1.0.v20131115'
 

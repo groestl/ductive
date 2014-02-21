@@ -10,7 +10,7 @@ public class TranslateTest {
 	
 	@Test
 	public void test1() {
-		TranslationContext translationContext = new TranslationContext("ductive-tests","en",new DefaultTranslationService());
+		TranslationContext translationContext = new TranslationContext("ductive-tests","en",new LoopbackTranslationService());
 		new InContextTemplate<Void>() {
 			@Override protected Void inContext() {
 				

@@ -7,6 +7,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
 
 import ductive.config.DefaultHealthChecks;
+import ductive.console.commands.lib.HealthCheckCommands;
 import ductive.console.commands.lib.MetricsCommands;
 
 @Configuration
@@ -26,6 +27,10 @@ public class DefaultMetricsCommandsConfig {
 
 	@Bean public MetricRegistry metricRegistry() {
 		return new MetricRegistry();
+	}
+	
+	@Bean public HealthCheckCommands healthCheckCommands() {
+		return new HealthCheckCommands();
 	}
 
 }

@@ -63,9 +63,9 @@ public class CommandRunner implements Command {
 	
 	public CommandRunner(CmdParser cmdParser, CommandInvoker commandInvoker, String commandLine) {
 		this.commandInvoker = commandInvoker;
-		executor = Executors.newSingleThreadExecutor();
 		this.cmdParser = cmdParser;
 		this.commandLine = commandLine;
+		this.executor = Executors.newSingleThreadExecutor();
 	}
 
 	@Override
@@ -74,10 +74,11 @@ public class CommandRunner implements Command {
 			@Override
 			public void run() {
 				try(LogContext ctx = new LogContext("remote-exec")) {
-					ctx.put("user",env.getEnv().get(Environment.ENV_USER));
+					String user = env.getEnv().get(Environment.ENV_USER);
+					ctx.put("user",user);
 					
 					NonInteractiveTerminal terminal = new NonInteractiveTerminal(out);
-					CommandContext commandCtx = new CommandContext(terminal);
+					CommandContext commandCtx = new CommandContext(terminal,new TerminalUser(user));
 					try {
 						CommandLine line = cmdParser.parse(commandLine);
 						Object result = commandInvoker.execute(commandCtx,line);

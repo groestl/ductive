@@ -49,6 +49,7 @@ import ductive.console.commands.register.model.MethodCommandTarget;
 import ductive.console.commands.register.model.OptionType;
 import ductive.console.commands.register.model.ParameterType;
 import ductive.console.shell.Terminal;
+import ductive.console.shell.TerminalUser;
 
 public class CommandInvoker {
 
@@ -90,6 +91,9 @@ public class CommandInvoker {
 						throw new RuntimeException(String.format("method '%s' does not support terminal '%s'",target.method,ctx.terminal));
 
 					args[i] = ctx.terminal;
+					continue;
+				} else if(TerminalUser.class.isAssignableFrom(param)) {
+					args[i] = ctx.user;
 					continue;
 				}
 

@@ -51,21 +51,21 @@ public class EmbeddedAppShell implements Shell {
 	private Provider<CmdParser> cmdParserProvider;
 
 	@Override
-	public void execute(InteractiveTerminal terminal) throws IOException {
+	public void execute(InteractiveTerminal terminal, TerminalUser user) throws IOException {
 		CmdParser cmdParser = cmdParserProvider.get();
 		try( ShellHistory history = historyProvider.history(HISTORY_KEY) ) {
 			ShellSettings settings = new StaticShellSettings(standardPrompt,cmdParser,history);
 			terminal.updateSettings(settings);
 
 			while (true) {
-				Integer result = execute(cmdParser,terminal,terminal.readLine());
+				Integer result = execute(cmdParser,terminal,terminal.readLine(),user);
 				if(result != null)
 					break;
 			}
 		}
 	}
 
-	private Integer execute(CmdParser cmdParser, InteractiveTerminal terminal, String command) throws IOException {
+	private Integer execute(CmdParser cmdParser, InteractiveTerminal terminal, String command, TerminalUser user) throws IOException {
 		if (command == null)
 			return 0;
 
@@ -76,7 +76,7 @@ public class EmbeddedAppShell implements Shell {
 			try {
 				CommandLine line = cmdParser.parse(command);
 				//terminal.println(line.toString());
-				commandInvoker.execute(new CommandContext(terminal),line);
+				commandInvoker.execute(new CommandContext(terminal,user),line);
 			} catch(NoMatchException e) {
 				terminal.errorln(e.getMessage());
 			}

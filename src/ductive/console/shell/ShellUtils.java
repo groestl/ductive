@@ -25,10 +25,10 @@ import java.io.IOException;
 
 public class ShellUtils {
 	
-	public static void nestedShell(InteractiveTerminal terminal, Shell shell) throws IOException {
+	public static void nestedShell(InteractiveTerminal terminal, TerminalUser user, Shell shell) throws IOException {
 		ShellSettings settings = terminal.getTerminalSettings();
 		try {
-			shell.execute(terminal);
+			shell.execute(terminal,user);
 		} finally {
 			terminal.updateSettings(settings);
 		}

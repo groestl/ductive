@@ -87,13 +87,14 @@ public class EmbeddedShellRunner implements Command {
 			@Override
 			public void run() {
 				try(LogContext ctx = new LogContext("remote-shell")) {
-					ctx.put("user",env.getEnv().get(Environment.ENV_USER));
+					String user = env.getEnv().get(Environment.ENV_USER);
+					ctx.put("user",user);
 
 					JLineConsoleReader r = new JLineConsoleReader(in,out,new SshTerminal(env));
 					r.setExpandEvents(false);
 					JLineInteractiveTerminal terminal = new JLineInteractiveTerminal(r,DefaultTerminalSettings.INSTANCE);
 
-					shell.execute(terminal);
+					shell.execute(terminal,new TerminalUser(user));
 
 					destroy();
 				} catch (Exception e) {

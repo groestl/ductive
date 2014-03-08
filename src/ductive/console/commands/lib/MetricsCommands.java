@@ -27,8 +27,6 @@ import java.util.Map.Entry;
 import java.util.SortedMap;
 
 import org.fusesource.jansi.Ansi;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.codahale.metrics.Counter;
@@ -44,11 +42,10 @@ import ductive.console.shell.Terminal;
 
 public class MetricsCommands {
 	
-	private static final Logger log = LoggerFactory.getLogger(MetricsCommands.class);
-	
 	@Autowired private MetricRegistry metricRegistry;
 	
-	@Cmd(path={"stats"},help="prints stats")
+	@Cmd(path={"metrics","stats"},help="prints stats")
+	@SuppressWarnings("rawtypes")
 	public void setLevel(Terminal terminal) throws IOException {
 		terminal.println("-counters");
 		{

@@ -29,17 +29,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ductive.console.commands.register.annotations.Cmd;
 import ductive.console.shell.EmbeddedGroovyShell;
+import ductive.console.shell.GroovyShellContextProvider;
 import ductive.console.shell.InteractiveTerminal;
 import ductive.console.shell.ShellUtils;
+import ductive.console.shell.TerminalUser;
 
 
 public class GroovyCommands {
 
 	@Autowired private Provider<EmbeddedGroovyShell> shellProvider;
+	
+	@Autowired(required=false) private GroovyShellContextProvider groovyShellContextProvider;
 
 	@Cmd(path={"gsh"},help="spawns a groovy interactive shell")
-	public void groovyShell(InteractiveTerminal terminal) throws IOException {
-		ShellUtils.nestedShell(terminal,shellProvider.get());
+	public void groovyShell(InteractiveTerminal terminal,TerminalUser user) throws IOException {
+		EmbeddedGroovyShell shell = shellProvider.get();
+		if(groovyShellContextProvider!=null)
+			shell.setShellContext(groovyShellContextProvider.context(user));
+		ShellUtils.nestedShell(terminal,user,shell);
 	}
 
 	public void setShellProvider(Provider<EmbeddedGroovyShell> shellProvider) {

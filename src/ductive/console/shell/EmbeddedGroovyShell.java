@@ -25,6 +25,8 @@ import groovy.lang.Binding;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Provider;
@@ -36,6 +38,7 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.InvokerInvocationException;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Color;
+
 import ductive.commons.Names;
 import ductive.console.groovy.GroovyInterpreter;
 import ductive.console.groovy.ReflectionCompleter;
@@ -53,11 +56,16 @@ public class EmbeddedGroovyShell implements Shell {
 	private Ansi resultMarker = DEFAULT_RESULT_MARKER;
 
 	private HistoryProvider historyProvider;
+	private Map<String, Object> context;
 
 	@Override
-	public void execute(InteractiveTerminal terminal) throws IOException {
+	public void execute(InteractiveTerminal terminal, TerminalUser user) throws IOException {
 		Binding binding = new Binding();
-		binding.setVariable("foo", new Integer(2));
+		
+		if(context!=null)
+			for(Entry<String,Object> e : context.entrySet())
+				binding.setVariable(e.getKey(),e.getValue());
+		
 
 		CompilerConfiguration config = new CompilerConfiguration();
 		binding.setProperty("out",new PrintStream(terminal.output(),true));
@@ -189,6 +197,10 @@ public class EmbeddedGroovyShell implements Shell {
 
 	public void setHistoryProvider(HistoryProvider historyProvider) {
 		this.historyProvider = historyProvider;
+	}
+
+	public void setShellContext(Map<String,Object> context) {
+		this.context = context;
 	}
 
 }

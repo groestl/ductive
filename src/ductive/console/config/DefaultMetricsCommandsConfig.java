@@ -2,16 +2,15 @@ package ductive.console.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.health.HealthCheckRegistry;
 
 import ductive.config.DefaultHealthChecks;
+import ductive.console.commands.lib.HealthCheckCommands;
 import ductive.console.commands.lib.MetricsCommands;
 
 @Configuration
-@Import(DefaultArgumentParserConfig.class)
 public class DefaultMetricsCommandsConfig {
 
 	@Bean public HealthCheckRegistry healthCheckRegistry() {
@@ -28,6 +27,10 @@ public class DefaultMetricsCommandsConfig {
 
 	@Bean public MetricRegistry metricRegistry() {
 		return new MetricRegistry();
+	}
+	
+	@Bean public HealthCheckCommands healthCheckCommands() {
+		return new HealthCheckCommands();
 	}
 
 }

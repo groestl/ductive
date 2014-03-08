@@ -33,6 +33,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.Validate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.util.ReflectionUtils;
 
 import com.google.common.base.Throwables;
 
@@ -48,6 +49,7 @@ import ductive.console.commands.register.model.MethodCommandTarget;
 import ductive.console.commands.register.model.OptionType;
 import ductive.console.commands.register.model.ParameterType;
 import ductive.console.shell.Terminal;
+import ductive.console.shell.TerminalUser;
 
 public class CommandInvoker {
 
@@ -90,6 +92,9 @@ public class CommandInvoker {
 
 					args[i] = ctx.terminal;
 					continue;
+				} else if(TerminalUser.class.isAssignableFrom(param)) {
+					args[i] = ctx.user;
+					continue;
 				}
 
 				ParameterType t = paramTypes[aidx++];
@@ -98,12 +103,11 @@ public class CommandInvoker {
 
 			Validate.isTrue(aidx==paramTypes.length);
 
-			return target.method.invoke(target.bean,args);
+			return ReflectionUtils.invokeMethod(target.method,target.bean,args);
 		} catch(Exception e) {
 			throw Throwables.propagate(e);
 		}
 	}
-
 
 
 	private Object handleParam(final Preprocessed pp, ParameterType t) {

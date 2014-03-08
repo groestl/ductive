@@ -22,13 +22,16 @@
 package ductive.console.commands.register;
 
 import ductive.console.shell.Terminal;
+import ductive.console.shell.TerminalUser;
 
 public class CommandContext {
 	
 	public final Terminal terminal;
+	public final TerminalUser user;
 
-	public CommandContext(Terminal terminal) {
+	public CommandContext(Terminal terminal, TerminalUser user) {
 		this.terminal = terminal;
+		this.user = user;
 	}
 
 }

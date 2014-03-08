@@ -1,16 +1,16 @@
 /*
  	Copyright (c) 2014 code.fm
- 	
+
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal
 	in the Software without restriction, including without limitation the rights
 	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 	copies of the Software, and to permit persons to whom the Software is
 	furnished to do so, subject to the following conditions:
-	
+
 	The above copyright notice and this permission notice shall be included in all
 	copies or substantial portions of the Software.
-	
+
 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,15 +35,13 @@ import org.apache.sshd.server.ExitCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
-
 import ductive.console.jline.JLineConsoleReader;
 import ductive.console.jline.JLineInteractiveTerminal;
 import ductive.console.sshd.SshTerminal;
 import ductive.log.LogContext;
 
 public class EmbeddedShellRunner implements Command {
-	
+
 	private static final Logger log = LoggerFactory.getLogger(EmbeddedShellRunner.class);
 
 	private final Executor executor;
@@ -57,7 +55,7 @@ public class EmbeddedShellRunner implements Command {
 	private ExitCallback callback;
 
 	private Shell shell;
-	
+
 	public EmbeddedShellRunner(Shell shell) {
 		executor = Executors.newSingleThreadExecutor();
 		this.shell = shell;
@@ -89,22 +87,23 @@ public class EmbeddedShellRunner implements Command {
 			@Override
 			public void run() {
 				try(LogContext ctx = new LogContext("remote-shell")) {
-					ctx.put("user",env.getEnv().get(Environment.ENV_USER));
-					
+					String user = env.getEnv().get(Environment.ENV_USER);
+					ctx.put("user",user);
+
 					JLineConsoleReader r = new JLineConsoleReader(in,out,new SshTerminal(env));
 					r.setExpandEvents(false);
 					JLineInteractiveTerminal terminal = new JLineInteractiveTerminal(r,DefaultTerminalSettings.INSTANCE);
-	
-					shell.execute(terminal);
-					
+
+					shell.execute(terminal,new TerminalUser(user));
+
 					destroy();
 				} catch (Exception e) {
 					if(log.isWarnEnabled())
 						log.warn(String.format("exception in remote console thread: %s",e));
-					
+
 					if(log.isDebugEnabled())
 						log.debug(String.format("exception in remote console thread:"),e);
-					
+
 					destroy();
 				}
 			}

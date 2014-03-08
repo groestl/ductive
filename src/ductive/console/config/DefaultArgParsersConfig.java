@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import ductive.console.commands.lib.DefaultArgParsers;
 
 @Configuration
-public class DefaultArgumentParserConfig {
+public class DefaultArgParsersConfig {
 
 	@Bean public DefaultArgParsers defaultArgParsers() {
 		return new DefaultArgParsers();

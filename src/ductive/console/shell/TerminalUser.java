@@ -21,11 +21,18 @@
  */
 package ductive.console.shell;
 
-import java.io.IOException;
+import java.io.Serializable;
 
+public class TerminalUser implements Serializable {
 
-public interface Shell {
+	private static final long serialVersionUID = 1L;
+	
+	public final String username;
+	
+	public TerminalUser(String username) {
+		this.username = username;
+	}
 
-	void execute(InteractiveTerminal terminal, TerminalUser terminalUser) throws IOException;
+	@Override public String toString() { return super.toString(); }
 
 }

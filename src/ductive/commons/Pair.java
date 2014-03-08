@@ -21,6 +21,10 @@
  */
 package ductive.commons;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+
 public class Pair<A,B> {
 	
 	public final A a;
@@ -29,6 +33,22 @@ public class Pair<A,B> {
 	public Pair(A a,B b) {
 		this.a = a;
 		this.b = b;
+	}
+	
+	@Override public int hashCode() {
+		return new HashCodeBuilder()
+			.append(a)
+			.append(b)
+			.toHashCode();
+	}
+	
+	@Override public boolean equals(Object obj) {
+		return Equals.eq(this,obj,new Equals.EqualsDefinition<Pair<A,B>>() {
+			@Override public void check(Pair<A, B> l, Pair<A, B> r, EqualsBuilder b) {
+				b.append(l.a,r.a)
+				 .append(l.b,r.b);
+			}
+		});
 	}
 	
 	public static <A,B> Pair<A,B> make(A a,B b) {

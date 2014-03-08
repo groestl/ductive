@@ -42,6 +42,7 @@ import ductive.console.commands.register.model.MethodCommandTarget;
 import ductive.console.commands.register.model.OptionType;
 import ductive.console.commands.register.model.ParameterType;
 import ductive.console.shell.Terminal;
+import ductive.console.shell.TerminalUser;
 
 public class CommandBeanPostProcessor implements BeanPostProcessor {
 
@@ -86,7 +87,9 @@ public class CommandBeanPostProcessor implements BeanPostProcessor {
 			}
 
 			private void processArgument(List<ParameterType> params,	Method method, Class<?> type, Annotation[] annotations) {
-				if( Terminal.class.isAssignableFrom(type) ) { // will be injected
+				if( Terminal.class.isAssignableFrom(type) || 
+					TerminalUser.class.isAssignableFrom(type )
+						) { // will be injected
 					return;
 				}
 

@@ -53,13 +53,13 @@ public class HealthCheckCommands {
 	
 	@Autowired private HealthCheckRegistry healthChecks;
 	
-	@Cmd(path={"app","health","list"},help="run health checks")
+	@Cmd(path={"metrics","health","list"},help="run health checks")
 	public void list(Terminal term) throws IOException {
 		for(String name : healthChecks.getNames())
 			term.println(new Ansi().fgBright(Color.CYAN).a(name).reset());
 	}
 
-	@Cmd(path={"app","health","check"},help="run health checks")
+	@Cmd(path={"metrics","health","check"},help="run health checks")
 	public int runHealthcheck(Terminal term, @Arg(value="pattern",optional=true) String pattern, @Opt(value="details") boolean details) throws IOException {
 		final Map<String,Result> results;
 		

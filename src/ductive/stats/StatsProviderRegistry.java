@@ -37,9 +37,13 @@ public class StatsProviderRegistry {
 
 
 	public void register(String[] path, Object bean, Method method) {
+		register(path,new MethodCallStatsProvider(bean,method));
+	}
+	
+	public void register(String[] path, StatsProvider statsProvider) {
 		Validate.isTrue(path.length>=1);
 		validatePath(path);
-		registerInternal(root,0,path,bean,method);
+		registerInternal(root,0,path,statsProvider);
 	}
 
 	private void validatePath(String[] path) {
@@ -49,7 +53,7 @@ public class StatsProviderRegistry {
 		}
 	}
 
-	private void registerInternal(Map<String,Object> map, int i, String[] path, Object bean, Method method) {
+	private void registerInternal(Map<String,Object> map, int i, String[] path, StatsProvider statsProvider) {
 		String name = path[i];
 		
 		if(i<path.length-1) {
@@ -57,40 +61,34 @@ public class StatsProviderRegistry {
 			Validate.isTrue(subval==null||Map.class.isInstance(subval),String.format("cannot register subtree: name '%s' already registered to a provider",name));
 			
 			Map<String,Object> submap = subval!=null ? StatsUtils.mapCast(subval) : new HashMap<String,Object>();
-			registerInternal(submap,++i,path,bean,method);
+			registerInternal(submap,++i,path,statsProvider);
 			map.put(name,submap);
 			return;
 		}
 		
 		Validate.isTrue(!map.containsKey(name),String.format("cannot register provider: name '%s' already registered",name));
 		
-		map.put(name,new ProviderEntry(path,bean,method));
+		map.put(name,statsProvider);
 	}
 	
 	
-	public static class ProviderEntry implements StatsProvider {
+	public static class MethodCallStatsProvider implements StatsProvider {
 
-		public final String[] path;
 		public final Object bean;
 		public final Method method;
 
-		public ProviderEntry(String[] path, Object bean, Method method) {
-			this.path = path;
+		public MethodCallStatsProvider(Object bean, Method method) {
 			this.bean = bean;
 			this.method = method;
 		}
 		
 		@Override
 		public Object query(String[][] paths, ValueConverter[] converters) {
-			return StatsProviderRegistry.query(bean,method,paths,converters);
+			return ReflectionUtils.invokeMethod(method,bean);
 		}
 		
 		@Override public String toString() { return ToString.me(this); }
 		
-	}
-	
-	private static Object query(Object bean, Method method, String[][] paths, ValueConverter[] converters) {
-		return ReflectionUtils.invokeMethod(method,bean);
 	}
 	
 	public static class StatsEntry {

@@ -3,14 +3,13 @@ apply plugin: 'eclipse'
 apply plugin: 'maven'
 
 sourceCompatibility = 1.7
-version = '0.0.6'
-project.ext.springVersion = '4.0.0.RC2'
+version = '0.0.6.1'
+project.ext.springVersion = '4.0.2.RELEASE'
 project.ext.jettyVersion = '9.1.0.v20131115'
 project.group = 'ductive'
 
 repositories {
 	mavenCentral()
-	mavenRepo name: 'SpringSource Milestone Repo', url: 'http://maven.springframework.org/milestone/'
 }
 
 dependencies {

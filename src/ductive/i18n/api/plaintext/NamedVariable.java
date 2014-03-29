@@ -35,9 +35,9 @@ public class NamedVariable {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<NamedVariable ");
-		sb.append(" name=").append(name()).append(" ");
-		sb.append(" value").append(value()).append("");
-		sb.append(">");
+		sb.append(" name='").append(name()).append(" ");
+		sb.append("' value='").append(value()).append("");
+		sb.append("'>");
 		return sb.toString();
 	}
 

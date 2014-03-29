@@ -24,18 +24,27 @@ package ductive.console.commands.parser;
 import java.util.List;
 
 import jline.console.completer.Completer;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ductive.console.commands.parser.model.CommandLine;
 import ductive.parse.Parser;
 import ductive.parse.errors.NoMatchException;
 import ductive.parse.jline.CompletorAdapter;
 
 public class CmdParser implements Completer {
+	
+	private static final Logger log = LoggerFactory.getLogger(CmdParser.class);
 
 	private Parser<CommandLine> parser;
 	private CompletorAdapter<?> completor;
 
-	public CmdParser(Parser<CommandLine> parser) {
+	private boolean verbose;
+
+	public CmdParser(Parser<CommandLine> parser, boolean verbose) {
 		this.parser = parser;
+		this.verbose = verbose;
 		this.completor = new CompletorAdapter<>(parser);
 	}
 
@@ -50,7 +59,8 @@ public class CmdParser implements Completer {
 		try {
 			return completor.complete(input,cursor,candidates);
 		} catch(NoMatchException e) {
-			e.printStackTrace();
+			if(verbose && log.isTraceEnabled())
+				log.trace(String.format("completion error: %s"),e);
 			return cursor;
 		}
 	}

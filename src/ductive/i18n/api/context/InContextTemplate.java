@@ -2,10 +2,10 @@ package ductive.i18n.api.context;
 
 abstract public class InContextTemplate<T> {
 
-	public void execute(TranslationContext translationContext) {
+	public T execute(TranslationContext translationContext) {
 		TranslationContextHolder.pushContext(translationContext);
 		try {
-			inContext();
+			return inContext();
 		} finally {
 			TranslationContextHolder.popContext();
 		}

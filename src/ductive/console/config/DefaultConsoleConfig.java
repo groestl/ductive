@@ -69,7 +69,7 @@ public class DefaultConsoleConfig {
 
 		final Provider<CmdParser> cmdParserProvider = new Provider<CmdParser>() {
 			@Override public CmdParser get() {
-				return new CmdParser(cmdParserBuilder.buildParser(commandRegistry.commands()));
+				return new CmdParser(cmdParserBuilder.buildParser(commandRegistry.commands()),false);
 			}
 		};
 

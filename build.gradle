@@ -3,7 +3,7 @@ apply plugin: 'eclipse'
 apply plugin: 'maven'
 
 sourceCompatibility = 1.7
-version = '0.0.6.1'
+version = '0.0.7'
 project.ext.springVersion = '4.0.2.RELEASE'
 project.ext.jettyVersion = '9.1.0.v20131115'
 project.group = 'ductive'

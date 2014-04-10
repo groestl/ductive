@@ -32,7 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 
 public abstract class StatsUtils {
-	
+
 	public static String[][] parseQueries(String ... paths) {
 		if(paths==null)
 			return null;
@@ -44,46 +44,46 @@ public abstract class StatsUtils {
 
 	public static Object query(Object value, String[][] paths, ValueConverter[] converters) {
 		value = expand(value,paths,converters);
-		
+
 		if(value==null)
 			return null;
-		
+
 		if( Number.class.isInstance(value) || String.class.isInstance(value) )
 			if(paths==null)
 				return value;
 			else
 				return null;
-		
+
 		if(!Map.class.isInstance(value))
 			throw new RuntimeException(String.format("value '%s' not supported",value));
-		
+
 		Map<String,Object> m = mapCast(value);
-		
+
 		Map<String,Object> result = new HashMap<>();
 		if(paths==null) {
-			
+
 			for(Entry<String,Object> e : m.entrySet())
 				result.put(e.getKey(),query(e.getValue(),null,converters));
-			
+
 		} else {
-			
+
 			Map<String,String[][]> subqueries = subqueries(paths);
 
 			for(Entry<String,String[][]> e : subqueries.entrySet()) {
 				Object subvalue = m.get(e.getKey());
 				if(subvalue==null)
 					continue;
-				
+
 				result.put(e.getKey(),query(subvalue,e.getValue(),converters));
 			}
 		}
-		
+
 		return result;
 	}
 
-	
+
 	private static Object expand(Object value, String[][] query, ValueConverter[] converters) {
-		if(StatsProvider.class.isInstance(value))
+		while(StatsProvider.class.isInstance(value))
 			value = StatsProvider.class.cast(value).query(query,converters);
 
 		if(value==null || Number.class.isInstance(value) || String.class.isInstance(value) || Map.class.isInstance(value))
@@ -108,14 +108,14 @@ public abstract class StatsUtils {
 	private static Map<String,String[][]> subqueries(String[][] paths) {
 		if(ArrayUtils.isEmpty(paths))
 			return null;
-		
-		Map<String,String[][]> subqueries = new HashMap<>(); 
+
+		Map<String,String[][]> subqueries = new HashMap<>();
 		for(String[] path : paths) {
 			if(ArrayUtils.isEmpty(path))
 				continue;
-			
+
 			String name = path[0];
-			
+
 			String[][] subquery = subqueries.get(name);
 			if(subquery!=null || !subqueries.containsKey(name)) {
 				String[] subarray = ArrayUtils.subarray(path,1,path.length);
@@ -127,8 +127,8 @@ public abstract class StatsUtils {
 		}
 		return subqueries;
 	}
-	
-	
+
+
 	@SuppressWarnings("unchecked")
 	public static Map<String,Object> makeFlat(Object tree) {
 		Validate.isTrue(Map.class.isInstance(tree));
@@ -136,7 +136,7 @@ public abstract class StatsUtils {
 		postprocess((Map<String,Object>)tree,null,result);
 		return result;
 	}
-	
+
 	private static void postprocess(Map<String, Object> tree, String[] path, Map<String,Object> result) {
 		for(Entry<String,Object> e : tree.entrySet()) {
 			Object val = e.getValue();

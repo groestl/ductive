@@ -1,16 +1,16 @@
 /*
  	Copyright (c) 2014 code.fm
- 	
+
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal
 	in the Software without restriction, including without limitation the rights
 	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 	copies of the Software, and to permit persons to whom the Software is
 	furnished to do so, subject to the following conditions:
-	
+
 	The above copyright notice and this permission notice shall be included in all
 	copies or substantial portions of the Software.
-	
+
 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -44,7 +44,7 @@ import ductive.console.jline.NonInteractiveTerminal;
 import ductive.log.LogContext;
 
 public class CommandRunner implements Command {
-	
+
 	private CmdParser cmdParser;
 	private CommandInvoker commandInvoker;
 	private String commandLine;
@@ -53,14 +53,14 @@ public class CommandRunner implements Command {
 	private OutputStream err;
 	private ExitCallback callback;
 	private InputStream in;
-	
+
 	private boolean closed;
 
 	private AtomicInteger exitCode = new AtomicInteger(0);
 	private ExecutorService executor;
-	
-	
-	
+
+
+
 	public CommandRunner(CmdParser cmdParser, CommandInvoker commandInvoker, String commandLine) {
 		this.commandInvoker = commandInvoker;
 		this.cmdParser = cmdParser;
@@ -73,10 +73,10 @@ public class CommandRunner implements Command {
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				try(LogContext ctx = new LogContext("remote-exec")) {
+				try(LogContext ctx = LogContext.create("remote-exec")) {
 					String user = env.getEnv().get(Environment.ENV_USER);
 					ctx.put("user",user);
-					
+
 					NonInteractiveTerminal terminal = new NonInteractiveTerminal(out);
 					CommandContext commandCtx = new CommandContext(terminal,new TerminalUser(user));
 					try {
@@ -90,7 +90,7 @@ public class CommandRunner implements Command {
 						}
 						exitCode.set(1);
 					}
-					
+
 					destroy();
 				} catch (Exception e) {
 					throw Throwables.propagate(e);
@@ -98,7 +98,7 @@ public class CommandRunner implements Command {
 			}
 		});
 	}
-	
+
 	@Override
 	public void setErrorStream(OutputStream err) {
 		this.err = err;

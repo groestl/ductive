@@ -86,7 +86,7 @@ public class EmbeddedShellRunner implements Command {
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				try(LogContext ctx = new LogContext("remote-shell")) {
+				try(LogContext ctx = LogContext.create("remote-shell")) {
 					String user = env.getEnv().get(Environment.ENV_USER);
 					ctx.put("user",user);
 

@@ -22,31 +22,45 @@
 package ductive.console.commands.lib;
 
 import java.io.IOException;
+import java.util.Map;
 
 import javax.inject.Provider;
 
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ductive.console.commands.register.annotations.Cmd;
+import ductive.console.shell.EmbeddedGroovyInterpreter;
 import ductive.console.shell.EmbeddedGroovyShell;
 import ductive.console.shell.GroovyShellContextProvider;
 import ductive.console.shell.InteractiveTerminal;
 import ductive.console.shell.ShellUtils;
+import ductive.console.shell.Terminal;
 import ductive.console.shell.TerminalUser;
 
 
 public class GroovyCommands {
 
 	@Autowired private Provider<EmbeddedGroovyShell> shellProvider;
-	
+	@Autowired private Provider<EmbeddedGroovyInterpreter> interpreterProvider;
+
 	@Autowired(required=false) private GroovyShellContextProvider groovyShellContextProvider;
 
 	@Cmd(path={"gsh"},help="spawns a groovy interactive shell")
-	public void groovyShell(InteractiveTerminal terminal,TerminalUser user) throws IOException {
-		EmbeddedGroovyShell shell = shellProvider.get();
-		if(groovyShellContextProvider!=null)
-			shell.setShellContext(groovyShellContextProvider.context(user));
-		ShellUtils.nestedShell(terminal,user,shell);
+	public void groovyShell(Terminal terminal,TerminalUser user) throws IOException {
+		if(InteractiveTerminal.class.isInstance(terminal)) {
+			EmbeddedGroovyShell shell = shellProvider.get();
+			shell.setShellContext(context(user));
+			ShellUtils.nestedShell(InteractiveTerminal.class.cast(terminal),user,shell);
+		} else {
+			EmbeddedGroovyInterpreter interpreter = interpreterProvider.get();
+			interpreter.setShellContext(context(user));
+			interpreter.execute(terminal,user,IOUtils.toString(terminal.input()));
+		}
+	}
+
+	private Map<String,Object> context(TerminalUser user) {
+		return groovyShellContextProvider!=null ? groovyShellContextProvider.context(user) : null;
 	}
 
 	public void setShellProvider(Provider<EmbeddedGroovyShell> shellProvider) {

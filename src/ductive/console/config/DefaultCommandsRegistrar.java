@@ -12,6 +12,7 @@ import ductive.console.commands.lib.GroovyCommands;
 import ductive.console.commands.lib.HelpCommands;
 import ductive.console.commands.lib.LogCommands;
 import ductive.console.commands.lib.StatsCommands;
+import ductive.console.shell.EmbeddedGroovyInterpreter;
 import ductive.console.shell.EmbeddedGroovyShell;
 
 public class DefaultCommandsRegistrar implements ImportBeanDefinitionRegistrar {
@@ -32,7 +33,11 @@ public class DefaultCommandsRegistrar implements ImportBeanDefinitionRegistrar {
 			registry.registerBeanDefinition("groovyShell",beanDefinition);
 		}
 
-
+		{
+			RootBeanDefinition beanDefinition = new RootBeanDefinition(EmbeddedGroovyInterpreter.class);
+			beanDefinition.setScope("prototype");
+			registry.registerBeanDefinition("groovyInterpreter",beanDefinition);
+		}
 	}
 
 	private void conditionallyRegister(AnnotationAttributes attr, BeanDefinitionRegistry registry, String attribute, String beanName, Class<?> clazz) {

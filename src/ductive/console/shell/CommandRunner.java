@@ -77,7 +77,7 @@ public class CommandRunner implements Command {
 					String user = env.getEnv().get(Environment.ENV_USER);
 					ctx.put("user",user);
 
-					NonInteractiveTerminal terminal = new NonInteractiveTerminal(out);
+					NonInteractiveTerminal terminal = new NonInteractiveTerminal(in,out);
 					CommandContext commandCtx = new CommandContext(terminal,new TerminalUser(user));
 					try {
 						CommandLine line = cmdParser.parse(commandLine);

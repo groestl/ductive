@@ -37,6 +37,7 @@ import ductive.console.commands.parser.model.CommandLine;
 import ductive.console.commands.register.CommandContext;
 import ductive.console.commands.register.CommandInvoker;
 import ductive.parse.errors.NoMatchException;
+import jline.console.UserInterruptException;
 
 public class EmbeddedAppShell implements Shell {
 
@@ -58,28 +59,31 @@ public class EmbeddedAppShell implements Shell {
 			terminal.updateSettings(settings);
 
 			while (true) {
-				Integer result = execute(cmdParser,terminal,terminal.readLine(),user);
+				Integer result = execute(cmdParser,terminal,history,user);
 				if(result != null)
 					break;
 			}
 		}
 	}
 
-	private Integer execute(CmdParser cmdParser, InteractiveTerminal terminal, String command, TerminalUser user) throws IOException {
-		if (command == null)
-			return 0;
-
-		if (StringUtils.isBlank(command))
-			return null;
-
+	private Integer execute(CmdParser cmdParser, InteractiveTerminal terminal, ShellHistory history, TerminalUser user) throws IOException {
 		try {
 			try {
+				String command = terminal.readLine();
+				
+				if (command == null)
+					return 0;
+
+				if (StringUtils.isBlank(command))
+					return null;
+				
 				CommandLine line = cmdParser.parse(command);
 				//terminal.println(line.toString());
 				commandInvoker.execute(new CommandContext(terminal,user),line);
 			} catch(NoMatchException e) {
 				terminal.errorln(e.getMessage());
 			}
+		} catch(UserInterruptException e) {
 		} catch (Throwable e) {
 			// Unroll invoker exceptions
 			if (e.getClass().getCanonicalName().equals("org.codehaus.groovy.runtime.InvokerInvocationException")) {

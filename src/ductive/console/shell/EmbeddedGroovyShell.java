@@ -22,6 +22,7 @@
 package ductive.console.shell;
 
 import groovy.lang.Binding;
+import jline.console.UserInterruptException;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -81,7 +82,16 @@ public class EmbeddedGroovyShell implements Shell {
 			terminal.updateSettings(settings);
 
 			while (true) {
-				String code = new CodeReader(terminal,pending).read();
+				pending.set(false);
+				
+				final String code;
+				try {
+					code = new CodeReader(terminal,pending).read();
+				} catch(UserInterruptException e) {
+					
+					continue;
+				}
+
 				if (code == null) {
 					terminal.println("");
 					break;
@@ -93,9 +103,6 @@ public class EmbeddedGroovyShell implements Shell {
 				try {
 					Object result = interpreter.interpret("true\n" + code); // i don't know why dummy 'true' is required...
 					terminal.println(String.format(resultMarker.toString(),result));
-	//			} catch (CompilationFailedException e) {
-	//				//terminal.error(e.toString());
-	//				filterAndPrintStackTrace(e);
 				} catch (Throwable e) {
 					// Unroll invoker exceptions
 					if (e instanceof InvokerInvocationException) {
@@ -131,7 +138,7 @@ public class EmbeddedGroovyShell implements Shell {
 				pending = terminal.readLine();
 				if (pending == null)
 					return null;
-
+				
 				// TODO: command handling
 				// String command = pending.trim();
 
@@ -154,7 +161,6 @@ public class EmbeddedGroovyShell implements Shell {
 					report();
 					return "";
 				}
-				//
 			}
 		}
 

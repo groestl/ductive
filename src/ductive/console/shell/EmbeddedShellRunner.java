@@ -91,10 +91,15 @@ public class EmbeddedShellRunner implements Command {
 					ctx.put("user",user);
 
 					JLineConsoleReader r = new JLineConsoleReader(in,out,new SshTerminal(env));
-					r.setExpandEvents(false);
-					JLineInteractiveTerminal terminal = new JLineInteractiveTerminal(r,DefaultTerminalSettings.INSTANCE);
-
-					shell.execute(terminal,new TerminalUser(user));
+					try {
+						r.setExpandEvents(false);
+						JLineInteractiveTerminal terminal = new JLineInteractiveTerminal(r,DefaultTerminalSettings.INSTANCE);
+		
+						shell.execute(terminal,new TerminalUser(user));
+					} finally {
+						r.shutdown();
+					}
+					
 
 					destroy();
 				} catch (Exception e) {

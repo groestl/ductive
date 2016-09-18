@@ -1,16 +1,16 @@
 /*
  	Copyright (c) 2014 code.fm
- 	
+
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal
 	in the Software without restriction, including without limitation the rights
 	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 	copies of the Software, and to permit persons to whom the Software is
 	furnished to do so, subject to the following conditions:
-	
+
 	The above copyright notice and this permission notice shall be included in all
 	copies or substantial portions of the Software.
-	
+
 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21,6 +21,8 @@
  */
 package ductive.console.jline;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -30,23 +32,22 @@ import java.util.List;
 
 import javax.inject.Provider;
 
-import jline.console.completer.Completer;
-import jline.internal.NonBlockingInputStream;
-
 import org.apache.commons.io.output.WriterOutputStream;
 import org.apache.commons.lang3.Validate;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Color;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Throwables;
 
 import ductive.console.shell.InteractiveTerminal;
 import ductive.console.shell.ShellHistory;
 import ductive.console.shell.ShellSettings;
-import ductive.parse.errors.NoMatchException;
+import jline.console.UserInterruptException;
+import jline.console.completer.Completer;
+import jline.internal.NonBlockingInputStream;
 
 public class JLineInteractiveTerminal implements InteractiveTerminal {
-	
+
 	private JLineConsoleReader jline;
 	private ShellSettings currentSettings;
 
@@ -54,7 +55,7 @@ public class JLineInteractiveTerminal implements InteractiveTerminal {
 		Validate.notNull(settings);
 		this.jline = r;
 		updateSettings(settings);
-		
+
 		jline.addCompleter(new Completer() {
 			@Override public int complete(String buffer, int cursor, List<CharSequence> candidates) {
 				return currentSettings.completer() != null ? currentSettings.completer().complete(buffer,cursor,candidates) : cursor;
@@ -65,8 +66,25 @@ public class JLineInteractiveTerminal implements InteractiveTerminal {
 				return currentSettings.prompt().get();
 			}
 		});
+
+		// hack to support Ctrl-C on the prompt in a bash-like manner
+		StringBuilder sb = new StringBuilder();
+		sb.appendCodePoint(3); // Ctrl-C
+		jline.getKeys().bind(sb,new ActionListener() {
+			@Override public void actionPerformed(ActionEvent e) {
+				try {
+					jline.println("^C");
+					flush();
+					String partialLine = jline.getCursorBuffer().buffer.toString();
+					jline.getCursorBuffer().clear();
+					throw new UserInterruptException(partialLine);
+				} catch(IOException x) {
+					throw Throwables.propagate(x);
+				}
+			}
+		});
 	}
-	
+
 	@Override
 	public InputStream input() {
 		return jline.getInput();
@@ -88,12 +106,12 @@ public class JLineInteractiveTerminal implements InteractiveTerminal {
 			return TIMEOUT;
 		return readChar();
 	}
-	
+
 	@Override
 	public OutputStream output() {
 		return new WriterOutputStream(jline.getOutput(),Charset.forName("UTF-8"),4096,true);
 	}
-	
+
 	@Override
 	public OutputStream error() throws IOException {
 		// FIXME: just fix me
@@ -101,42 +119,42 @@ public class JLineInteractiveTerminal implements InteractiveTerminal {
 		writer.write(new Ansi().bold().fg(Color.RED).toString());
 		return new WriterOutputStream(writer);
 	}
-	
+
 	@Override
 	public void print(String value) throws IOException {
 		jline.print(value);
 	}
-	
+
 	@Override
 	public void print(Ansi value) throws IOException {
 		jline.print(value.toString());
 	}
-	
+
 	@Override
 	public void println(String value) throws IOException {
 		jline.println(value);
 	}
-	
+
 	@Override
 	public void println(Ansi value) throws IOException {
 		jline.println(value.toString());
 	}
-	
+
 	@Override
 	public void error(String value) throws IOException {
 		jline.print(new Ansi().bold().fg(Color.RED).a(value).reset().toString());
 	}
-	
+
 	@Override
 	public void errorln(String value) throws IOException {
 		jline.println(new Ansi().bold().fg(Color.RED).a(value).reset().toString());
 	}
-	
+
 	@Override
 	public void flush() throws IOException {
 		jline.flush();
 	}
-	
+
 	@Override
 	public void updateSettings(ShellSettings settings) {
 		this.currentSettings = settings;
@@ -149,7 +167,7 @@ public class JLineInteractiveTerminal implements InteractiveTerminal {
 			jline.setHistory(null);
 		}
 	}
-	
+
 	@Override
 	public ShellSettings getTerminalSettings() {
 		return currentSettings;

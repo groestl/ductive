@@ -163,6 +163,33 @@ public class SimpleCompleterTests {
 		assertThat(suggestions,is(list("--arg")));
 		assertEquals(0,pos);
 	}
+	
+	@Test
+	public void optionalCompleteParseAvailable() {
+		Parser<String> example = Parsers.WHITESPACE.optional().precedes(Parsers.string("blah").token());
+		CompletorAdapter<String> completor = new CompletorAdapter<>(example);
+		int pos = completor.complete("  ",2,suggestions);
+		assertThat(suggestions,is(list("blah")));
+		assertEquals(2,pos);
+	}
+	
+	@Test
+	public void optionalCompleteParseUnavailable() {
+		Parser<String> example = Parsers.WHITESPACE.optional().precedes(Parsers.string("blah").token());
+		CompletorAdapter<String> completor = new CompletorAdapter<>(example);
+		int pos = completor.complete("",0,suggestions);
+		assertThat(suggestions,is(list("blah")));
+		assertEquals(0,pos);
+	}
+	
+	@Test
+	public void optionalCompleteAlreadyPartialParsed() {
+		Parser<String> example = Parsers.WHITESPACE.optional().precedes(Parsers.string("blah").token());
+		CompletorAdapter<String> completor = new CompletorAdapter<>(example);
+		int pos = completor.complete("bl",2,suggestions);
+		assertThat(suggestions,is(list("blah")));
+		assertEquals(0,pos);
+	}
 
 
 	@Test

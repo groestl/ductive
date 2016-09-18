@@ -127,16 +127,14 @@ public class CmdParserBuilder {
 	}
 
 	private Parser<?> fallbackArgValueParser(ArgumentType arg, Class<?> clazz) {
-		//if(String.class.isAssignableFrom(clazz))
-		return Parsers.ANY; //.NON_WHITESPACE;
-		//throw new UnsupportedOperationException(String.format("cannot build argument parser for argument %s (target type %s)",arg,clazz));
+		return Parsers.ANY;
 	}
 
 	private static Parser<List<String>> path(String... path) {
 		List<Parser<String>> parts = new ArrayList<>();
 		for(String p : path)
 			parts.add(token(p));
-		return Parsers.list(parts);
+		return Parsers.WHITESPACE.optional().precedes(Parsers.list(parts));
 	}
 
 	private static Parser<String> token(String recognize) {
@@ -148,7 +146,6 @@ public class CmdParserBuilder {
 				Parsers.or(Parsers.WHITESPACE,Parsers.EOF),
 				Parsers.WHITESPACE
 		);
-
 		return new QuoteParser<>(p).followedBy(tokenTerminator).token();
 	}
 

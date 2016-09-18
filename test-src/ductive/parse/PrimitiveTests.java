@@ -22,6 +22,7 @@
 package ductive.parse;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -351,6 +352,20 @@ public class PrimitiveTests {
 
 		List<String> result = parser.parse("aa");
 		assertThat(result,is(Arrays.asList("a","a","a")));
+	}
+	
+	@Test
+	public void optionalParserParseAvailable() {
+		Parser<String> p = Parsers.string("a").optional();
+		String result = p.parse("a");
+		assertThat(result,is("a"));
+	}
+	
+	@Test
+	public void optionalParserParseUnavailable() {
+		Parser<String> p = Parsers.string("a").optional();
+		String result = p.parse("");
+		assertThat(result,nullValue());
 	}
 
 }

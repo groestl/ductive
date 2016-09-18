@@ -37,10 +37,13 @@ import org.apache.commons.io.output.WriterOutputStream;
 import org.apache.commons.lang3.Validate;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Color;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ductive.console.shell.InteractiveTerminal;
 import ductive.console.shell.ShellHistory;
 import ductive.console.shell.ShellSettings;
+import ductive.parse.errors.NoMatchException;
 
 public class JLineInteractiveTerminal implements InteractiveTerminal {
 	

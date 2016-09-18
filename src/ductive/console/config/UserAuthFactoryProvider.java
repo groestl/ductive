@@ -3,7 +3,7 @@ package ductive.console.config;
 import java.util.List;
 
 import org.apache.sshd.common.NamedFactory;
-import org.apache.sshd.server.UserAuth;
+import org.apache.sshd.server.auth.UserAuth;
 
 public interface UserAuthFactoryProvider {
 

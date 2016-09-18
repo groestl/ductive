@@ -1,16 +1,16 @@
 /*
  	Copyright (c) 2014 code.fm
- 	
+
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal
 	in the Software without restriction, including without limitation the rights
 	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 	copies of the Software, and to permit persons to whom the Software is
 	furnished to do so, subject to the following conditions:
-	
+
 	The above copyright notice and this permission notice shall be included in all
 	copies or substantial portions of the Software.
-	
+
 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,8 +33,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import ductive.parse.Parser;
-import ductive.parse.Parsers;
 import ductive.parse.errors.ExtraContentException;
 import ductive.parse.errors.NoFinishingQuoteException;
 import ductive.parse.errors.NoMatchException;
@@ -141,10 +139,33 @@ public class PrimitiveTests {
 	@Test
 	public void emptyDoubleQuote() {
 		thrown.expect(UnexpectedEofException.class);
-		thrown.expectMessage(String.format(DoubleQuoteParser.REACHED_EOF_MESSAGE_START));
 		Parser<String> p2 = Parsers.doubleQuoted();
 		p2.parseFully("");
 		throw new IllegalStateException();
+	}
+
+	@Test
+	public void doubleQuotedStringWithQuotedQuoteChar() {
+		Parser<String> quoted = Parsers.doubleQuoted(Parsers.string("abc\\"));
+		String result = quoted.parseFully("\"abc\\\\\"");
+		assertEquals("abc\\",result);
+	}
+
+	@Test
+	public void openDoubleQuotedStringWithQuotedQuoteChar() {
+		thrown.expect(NoFinishingQuoteException.class);
+		thrown.expectMessage(DoubleQuoteParser.REACHED_EOF_MESSAGE_END);
+		Parser<String> quoted = Parsers.doubleQuoted(Parsers.string("abc\\"));
+		quoted.parseFully("\"abc\\\\");
+		throw new IllegalStateException();
+	}
+
+	@Test
+	public void openDoubleQuotedStringWithDanglingQuoteChar() {
+		thrown.expect(NoFinishingQuoteException.class);
+		thrown.expectMessage(DoubleQuoteParser.REACHED_EOF_MESSAGE_END);
+		Parser<String> quoted = Parsers.doubleQuoted(Parsers.string("abc\\"));
+		quoted.parse("\"abc\\");
 	}
 
 	@Test

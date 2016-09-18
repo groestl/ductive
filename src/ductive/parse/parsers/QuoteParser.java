@@ -21,50 +21,39 @@
  */
 package ductive.parse.parsers;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import ductive.parse.ParseContext;
 import ductive.parse.Parser;
-import ductive.parse.Result;
-import ductive.parse.errors.ExtraContentException;
-import ductive.parse.locators.LookupPosMapping;
-import ductive.parse.parsers.quoting.PerCharacterQuoteParserUtils;
-import ductive.parse.parsers.quoting.UnquoteResult;
+import ductive.parse.Parsers;
 
-public class PerCharacterQuoteParser<T> extends Parser<T> {
+public class QuoteParser<T> extends OrParser<T> {
 
-	public static final String EXTRA_CONTENT_MESSAGE = "Extra content '%s' at the end of single quoted literal '%s'";
+	private Parser<? extends T> singleQuoted;
+	private Parser<? extends T> doubleQuoted;
+	private Parser<? extends T> perCharacterQuoted;
 
-
-	private Parser<T> inner;
-
-	public PerCharacterQuoteParser(Parser<T> inner) {
-		this.inner = inner;
+	@SuppressWarnings("unchecked")
+	public QuoteParser(Parser<? extends T> inner) {
+		super(new Parser[] {
+			Parsers.singleQuoted(inner),
+			Parsers.doubleQuoted(inner),
+			Parsers.perCharacterQuoted(inner)
+		});
+		this.singleQuoted = super.alternatives[0];
+		this.doubleQuoted = super.alternatives[1];
+		this.perCharacterQuoted = super.alternatives[2];
 	}
 
-	@Override
-	public Result<T> doApply(ParseContext ctx) {
-		final UnquoteResult ur = PerCharacterQuoteParserUtils.unquote(ctx);
-
-		ParseContext innerCtx = ctx.fork(ur.unquoted,new LookupPosMapping(ur.offsets));
-		Result<T> r = inner.apply(innerCtx);
-		if(r.ctx.length()>0)
-			throw new ExtraContentException(String.format(EXTRA_CONTENT_MESSAGE,r.ctx,innerCtx),r.ctx,innerCtx,ctx,innerCtx.length()-r.ctx.length()+1);
-
-		return Result.make(r.value,ctx.eatInput(ur.pos));
-	}
-
-	// FIXME:
 	@Override
 	public List<CharSequence> suggest(ParseContext ctx) {
-		List<CharSequence> result = new ArrayList<>();
-		List<CharSequence> suggested = inner.suggest(ctx);
-
-		for(CharSequence s : suggested)
-			result.add(PerCharacterQuoteParserUtils.quoted(s));
-
-		return result;
+		if(ctx.length()==0)
+			return perCharacterQuoted.suggest(ctx);
+		if(ctx.charAt(0) == '"')
+			return doubleQuoted.suggest(ctx);
+		if(ctx.charAt(0) == '\'')
+			return singleQuoted.suggest(ctx);
+		return perCharacterQuoted.suggest(ctx);
 	}
 
 }

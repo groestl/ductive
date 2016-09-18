@@ -1,16 +1,16 @@
 /*
  	Copyright (c) 2014 code.fm
- 	
+
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal
 	in the Software without restriction, including without limitation the rights
 	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 	copies of the Software, and to permit persons to whom the Software is
 	furnished to do so, subject to the following conditions:
-	
+
 	The above copyright notice and this permission notice shall be included in all
 	copies or substantial portions of the Software.
-	
+
 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -29,16 +29,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import jline.console.completer.Completer;
-
 import org.junit.Before;
 import org.junit.Test;
 
-import ductive.parse.Parser;
-import ductive.parse.Parsers;
-import ductive.parse.Tuple;
 import ductive.parse.errors.UnexpectedCharacterException;
 import ductive.parse.jline.CompletorAdapter;
+import jline.console.completer.Completer;
 
 public class SimpleCompleterTests {
 
@@ -165,6 +161,79 @@ public class SimpleCompleterTests {
 		CompletorAdapter<Tuple<String, String>> completer = new CompletorAdapter<>(p);
 		long pos=completer.complete("--a",3,suggestions);
 		assertThat(suggestions,is(list("--arg")));
+		assertEquals(0,pos);
+	}
+
+
+	@Test
+	public void doubleQuote1() {
+		Parser<String> p = Parsers.string("\"data\"").token();
+		CompletorAdapter<String> completer = new CompletorAdapter<>(p);
+		long pos=completer.complete("",0,suggestions);
+		assertThat(suggestions,is(list("\"data\"")));
+		assertEquals(0,pos);
+	}
+
+	@Test
+	public void doubleQuote() {
+		Parser<String> p = Parsers.doubleQuoted(Parsers.string("data")).token();
+		CompletorAdapter<String> completer = new CompletorAdapter<>(p);
+		long pos=completer.complete("",0,suggestions);
+		assertThat(suggestions,is(list("\"data\"")));
+		assertEquals(0,pos);
+	}
+
+	@Test
+	public void doubleQuote2() {
+		Parser<String> p = Parsers.doubleQuoted(Parsers.string("data")).token();
+		CompletorAdapter<String> completer = new CompletorAdapter<>(p);
+		long pos=completer.complete("\"",1,suggestions);
+		assertThat(suggestions,is(list("\"data\"")));
+		assertEquals(0,pos);
+	}
+
+	@Test
+	public void openDoubleQuotedStringWithDanglingQuoteChar() {
+		Parser<String> p = Parsers.doubleQuoted(Parsers.string("\\")).token();
+		CompletorAdapter<String> completer = new CompletorAdapter<>(p);
+		long pos=completer.complete("\"\\",2,suggestions);
+		assertThat(suggestions,is(list("\"\\\\\"")));
+		assertEquals(0,pos);
+	}
+
+	@Test
+	public void doubleQuoteMulti() {
+		Parser<String> p = Parsers.doubleQuoted(Parsers.or(Parsers.string("data"),Parsers.string("datum"))).token();
+		CompletorAdapter<String> completer = new CompletorAdapter<>(p);
+		long pos=completer.complete("\"",1,suggestions);
+		assertThat(suggestions,is(list("\"data\"","\"datum\"")));
+		assertEquals(0,pos);
+	}
+
+	@Test
+	public void doubleQuoteMultiInnerParserHasCharsToEat() {
+		Parser<String> p = Parsers.doubleQuoted(Parsers.or(Parsers.string("data"),Parsers.string("datum"))).token();
+		CompletorAdapter<String> completer = new CompletorAdapter<>(p);
+		long pos=completer.complete("\"dat",4,suggestions);
+		assertThat(suggestions,is(list("\"data\"","\"datum\"")));
+		assertEquals(0,pos);
+	}
+
+	@Test
+	public void doubleQuoteMultiInnerStringContainsQuotedChars() {
+		Parser<String> p = Parsers.doubleQuoted(Parsers.or(Parsers.string("da\"ta"),Parsers.string("da\"tum"))).token();
+		CompletorAdapter<String> completer = new CompletorAdapter<>(p);
+		long pos=completer.complete("\"da\\\"t",5,suggestions);
+		assertThat(suggestions,is(list("\"da\\\"ta\"","\"da\\\"tum\"")));
+		assertEquals(0,pos);
+	}
+
+	@Test
+	public void doubleQuoteMultiInnerStringContainsQuotedChars2() {
+		Parser<String> p = Parsers.doubleQuoted(Parsers.or(Parsers.string("da\"ta"),Parsers.string("da\"tum"))).token();
+		CompletorAdapter<String> completer = new CompletorAdapter<>(p);
+		long pos=completer.complete("\"da\\\"ta",7,suggestions);
+		assertThat(suggestions,is(list("\"da\\\"ta\"")));
 		assertEquals(0,pos);
 	}
 

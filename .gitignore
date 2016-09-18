@@ -3,3 +3,6 @@
 /bin/
 /build/
 /.settings/
+/host.key
+/shell
+/shell.port

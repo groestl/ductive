@@ -1,16 +1,16 @@
 /*
  	Copyright (c) 2014 code.fm
- 	
+
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal
 	in the Software without restriction, including without limitation the rights
 	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 	copies of the Software, and to permit persons to whom the Software is
 	furnished to do so, subject to the following conditions:
-	
+
 	The above copyright notice and this permission notice shall be included in all
 	copies or substantial portions of the Software.
-	
+
 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,7 +23,9 @@ package ductive.parse.parsers;
 
 
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import java.util.ArrayList;
+import java.util.List;
+
 import ductive.parse.ParseContext;
 import ductive.parse.Parser;
 import ductive.parse.Result;
@@ -31,7 +33,11 @@ import ductive.parse.errors.ExtraContentException;
 import ductive.parse.errors.NoFinishingQuoteException;
 import ductive.parse.errors.UnexpectedCharacterException;
 import ductive.parse.errors.UnexpectedEofException;
-import ductive.parse.locators.PosMapping;
+import ductive.parse.locators.LookupPosMapping;
+import ductive.parse.parsers.quoting.DoubleQuoteParserUtils;
+import ductive.parse.parsers.quoting.DoubleQuoteParserUtils.DoubleQuoteUnexpectedCharacterException;
+import ductive.parse.parsers.quoting.DoubleQuoteParserUtils.DoubleQuoteUnexpectedEofException;
+import ductive.parse.parsers.quoting.UnquoteResult;
 
 public class DoubleQuoteParser<T> extends Parser<T> {
 
@@ -49,77 +55,35 @@ public class DoubleQuoteParser<T> extends Parser<T> {
 
 	@Override
 	public Result<T> doApply(ParseContext ctx) {
-		int pos = 0;
-
-		if(ctx.length()==0)
-			throw new UnexpectedEofException(REACHED_EOF_MESSAGE_START,ctx,0);
-
-		char fc = ctx.charAt(pos++);
-		if(fc!='\"')
-			throw new UnexpectedCharacterException(String.format("Unexpected character '%s' while looking for starting quote character \"",fc),ctx,0);
-
-		StringBuffer b = new StringBuffer();
-		boolean escaping = false;
-		boolean inquotes = true;
-		while(pos<ctx.length()) {
-			char c=ctx.charAt(pos++);
-
-			if(!escaping) {
-				if(c=='"') {
-					inquotes=false;
-					break;
-				}
-
-				if(c=='\\')
-					escaping=true;
-				else
-					b.append(c);
-				continue;
-			}
-
-			switch(c) {
-			case '\\':
-				b.append('\\');
-				break;
-			case 'b':
-				b.append('\b');
-				break;
-			case 'n':
-				b.append('\n');
-				break;
-			case 't':
-				b.append('\t');
-				break;
-			case 'f':
-				b.append('\f');
-				break;
-			case 'r':
-				b.append('\r');
-				break;
-			default:
-				b.append(c);
-			}
-			escaping=false;
+		final UnquoteResult pr;
+		try {
+			 pr = DoubleQuoteParserUtils.unquote(ctx);
+		} catch(DoubleQuoteUnexpectedEofException e) {
+			throw new UnexpectedEofException(e.getMessage(),ctx,e.pos,e);
+		} catch(DoubleQuoteUnexpectedCharacterException e) {
+			throw new UnexpectedCharacterException(e.getMessage(),ctx,e.pos,e);
 		}
 
-		if(pos>=ctx.length() && inquotes && !ctx.isCompleting())
-			throw new NoFinishingQuoteException(REACHED_EOF_MESSAGE_END,ctx,pos-1);
+		if(pr.pos>=ctx.length() && pr.inquotes) // && !ctx.isCompleting())
+			throw new NoFinishingQuoteException(REACHED_EOF_MESSAGE_END,ctx,pr.pos); //-1);
 
-		ParseContext innerCtx = ctx.fork(b.toString(),new DoubleQuotePosMapping());
+		ParseContext innerCtx = ctx.fork(pr.unquoted,new LookupPosMapping(pr.offsets));
 		Result<T> r = inner.apply(innerCtx);
 		if(r.ctx.length()>0)
 			throw new ExtraContentException(String.format(EXTRA_CONTENT_MESSAGE,r.ctx,innerCtx),r.ctx,innerCtx,ctx,innerCtx.length()-r.ctx.length()+1);
 
-		return Result.make(r.value,ctx.eatInput(pos));
+		return Result.make(r.value,ctx.eatInput(pr.pos));
 	}
 
-	private static class DoubleQuotePosMapping implements PosMapping {
+	@Override
+	public List<CharSequence> suggest(ParseContext ctx) {
+		List<CharSequence> result = new ArrayList<>();
+		List<CharSequence> suggested = inner.suggest(ctx);
 
-		@Override
-		public long map(long pos) {
-			throw new NotImplementedException();
-		}
+		for(CharSequence s : suggested)
+			result.add(DoubleQuoteParserUtils.quoted(s));
 
+		return result;
 	}
 
 }

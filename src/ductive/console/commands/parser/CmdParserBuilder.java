@@ -45,6 +45,7 @@ import ductive.console.commands.register.model.ParameterType;
 import ductive.parse.Parser;
 import ductive.parse.Parsers;
 import ductive.parse.Tuple;
+import ductive.parse.parsers.QuoteParser;
 
 public class CmdParserBuilder {
 
@@ -127,7 +128,7 @@ public class CmdParserBuilder {
 
 	private Parser<?> fallbackArgValueParser(ArgumentType arg, Class<?> clazz) {
 		//if(String.class.isAssignableFrom(clazz))
-		return Parsers.NON_WHITESPACE;
+		return Parsers.ANY; //.NON_WHITESPACE;
 		//throw new UnsupportedOperationException(String.format("cannot build argument parser for argument %s (target type %s)",arg,clazz));
 	}
 
@@ -148,15 +149,8 @@ public class CmdParserBuilder {
 				Parsers.WHITESPACE
 		);
 
-		return p.followedBy(tokenTerminator).token();
-		/*Parsers.or(
-			//Parsers.singleQuoted(p).followedBy(tokenTerminator).token(),
-			//Parsers.doubleQuoted(p).followedBy(tokenTerminator).token(),
-
-		);*/
-
+		return new QuoteParser<>(p).followedBy(tokenTerminator).token();
 	}
-
 
 	public void setArgParserRegistry(ArgParserRegistry argParserRegistry) {
 		this.argParserRegistry = argParserRegistry;

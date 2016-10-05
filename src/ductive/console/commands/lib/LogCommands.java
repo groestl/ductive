@@ -23,17 +23,18 @@ package ductive.console.commands.lib;
 
 
 import java.io.IOException;
+import java.io.Serializable;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.AppenderSkeleton;
-import org.apache.log4j.Layout;
-import org.apache.log4j.Level;
-import org.apache.log4j.PatternLayout;
-import org.apache.log4j.spi.LoggingEvent;
-import org.apache.log4j.spi.ThrowableInformation;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.Filter;
+import org.apache.logging.log4j.core.Layout;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Color;
 import org.slf4j.Logger;
@@ -54,7 +55,7 @@ public class LogCommands {
 
 	private static final Logger log = LoggerFactory.getLogger(LogCommands.class);
 
-	private static final String DEFAULT_LOG_PATTERN = "%d %5p [%c] %X{_ductive} %m%n";
+	private static final String DEFAULT_LOG_PATTERN = "%d %5p [%c] %x%X %m%n";
 
 	private static final int CR = 13;
 	private static final int CTRL_C = 3;
@@ -64,15 +65,17 @@ public class LogCommands {
 
 	@Cmd(path={"log","set-level"},help="sets the threshold of a logger")
 	public void setLevel(Terminal terminal, @Arg(value="logger",optional=true) String loggerName, @Arg(value="level",optional=true) Level level_) throws IOException {
-		final org.apache.log4j.Logger logger;
+		final org.apache.logging.log4j.Logger logger;
 		if(StringUtils.isEmpty(loggerName))
-			logger = org.apache.log4j.Logger.getRootLogger();
+			logger = org.apache.logging.log4j.LogManager.getRootLogger();
 		else
-			logger = org.apache.log4j.Logger.getLogger(loggerName);
+			logger = org.apache.logging.log4j.LogManager.getLogger(loggerName);
 
-		final Level level = level_!=null ? level_ : Level.TRACE;
+		final org.apache.logging.log4j.Level level = level_!=null ? level_ : org.apache.logging.log4j.Level.TRACE;
 
-		logger.setLevel(level);
+		org.apache.logging.log4j.core.Logger coreLogger = (org.apache.logging.log4j.core.Logger)logger;
+		coreLogger.setLevel(level);
+
 		terminal.println(new Ansi().a("logger ").bold().a(logger.getName()).boldOff().a(" set to level ").bold().a(level).boldOff());
 	}
 
@@ -80,26 +83,32 @@ public class LogCommands {
 	@Cmd(path={"log","attach"},help="checks health of app")
 	public void logAttach(Terminal terminal, @Arg(value="logger",optional=true) String loggerName, @Arg(value="level",optional=true) Level level_) throws IOException {
 
-		final org.apache.log4j.Logger logger;
+		final org.apache.logging.log4j.Logger logger;
 		if(StringUtils.isEmpty(loggerName))
-			logger = org.apache.log4j.Logger.getRootLogger();
+			logger = org.apache.logging.log4j.LogManager.getRootLogger();
 		else
-			logger = org.apache.log4j.Logger.getLogger(loggerName);
+			logger = org.apache.logging.log4j.LogManager.getLogger(loggerName);
+		org.apache.logging.log4j.core.Logger coreLogger = (org.apache.logging.log4j.core.Logger)logger;
+
+		Configuration config = coreLogger.getContext().getConfiguration();
 
 		final Level level = level_!=null ? level_ : Level.TRACE;
+		coreLogger.setLevel(level);
 
-		PatternLayout layout = new PatternLayout(logPattern);
-		RemoteTerminalAppender appender = new RemoteTerminalAppender(layout,terminal);
-		appender.setThreshold(level);
+		PatternLayout layout = PatternLayout.newBuilder().withConfiguration(config).withPattern(logPattern).build();
+		RemoteTerminalAppender appender = new RemoteTerminalAppender(terminal,UUID.randomUUID().toString(),null,layout,true);
+		appender.start();
+
+		coreLogger.addAppender(appender);
 
 		try {
 			if(log.isInfoEnabled())
-				log.info(String.format("terminal attached to logger %s.",logger.getName()));
+				log.info(String.format("terminal attached to logger '%s'",StringUtils.defaultIfBlank(logger.getName(),"ROOT")));
 
-			logger.addAppender(appender);
+			coreLogger.addAppender(appender);
 
 			if(InteractiveTerminal.class.isInstance(terminal)) {
-				terminal.println(new Ansi().fgBright(Color.WHITE).bold().a(String.format("---- catching %s on logger %s. press 'q', ^D or ^C to detach ----",level,logger.getName())).reset());
+				terminal.println(new Ansi().fgBright(Color.WHITE).bold().a(String.format("---- catching %s on logger %s. press 'q', ^D or ^C to detach ----",level,StringUtils.defaultIfBlank(logger.getName(),"ROOT"))).reset());
 				terminal.flush();
 
 				InteractiveTerminal term = InteractiveTerminal.class.cast(terminal);
@@ -113,71 +122,62 @@ public class LogCommands {
 						break;
 				}
 			} else {
-				terminal.println(new Ansi().fgBright(Color.WHITE).bold().a(String.format("---- catching %s on logger %s ----",level,logger.getName())).reset());
+				terminal.println(new Ansi().fgBright(Color.WHITE).bold().a(String.format("---- catching %s on logger %s ----",level,StringUtils.defaultIfBlank(logger.getName(),"ROOT"))).reset());
 				terminal.flush();
 				while(!appender.hasIoErrors())
 					SleepUtils.sleep(100);
 			}
 		} finally {
-			logger.removeAppender(appender);
+			coreLogger.removeAppender(appender);
+			appender.stop();
 			if(log.isInfoEnabled())
-				log.info(String.format("terminal detached from logger %s.",logger.getName()));
+				log.info(String.format("terminal detached from logger '%s'",StringUtils.defaultIfBlank(logger.getName(),"ROOT")));
 		}
 	}
 
-	private static class RemoteTerminalAppender extends AppenderSkeleton {
+	private static class RemoteTerminalAppender extends org.apache.logging.log4j.core.appender.AbstractAppender {
 
 		private Terminal terminal;
-		private Layout layout;
 		private AtomicBoolean hasIoErrors = new AtomicBoolean(false);
 
-		public RemoteTerminalAppender(Layout layout, Terminal terminal) {
-			this.layout = layout;
+		public RemoteTerminalAppender(Terminal terminal, String name, Filter filter, Layout<? extends Serializable> layout, boolean ignoreExceptions) {
+			super(name, filter, layout, ignoreExceptions);
 			this.terminal = terminal;
-
 		}
-		@Override protected void append(LoggingEvent ev) {
-			String msg = layout.format(ev);
+
+		@Override
+		public void append(org.apache.logging.log4j.core.LogEvent ev) {
+			if(ev.getLoggerName().startsWith("org.apache.sshd") && ev.getLevel().isLessSpecificThan(Level.INFO))
+				return;
+
+			String msg = new String(getLayout().toByteArray(ev));
 			try {
 				Ansi a = formatAnsi(new Ansi(),ev.getLevel()).a(msg);
-				if(layout.ignoresThrowable()) {
-					ThrowableInformation t = ev.getThrowableInformation();
-					if(t!=null)
-						a = a.a(StringUtils.join(t.getThrowableStrRep(),'\n')).a('\n');
-				}
 				terminal.print(a.reset().toString());
 				terminal.flush();
 			} catch (IOException e) {
 				hasIoErrors.set(true);
-				//throw Throwables.propagate(e);
 			}
-		}
+		};
 
 		public boolean hasIoErrors() {
 			return hasIoErrors.get();
 		}
 
 		private static Ansi formatAnsi(Ansi a, Level level) {
-			int n = level.toInt();
-			if(n<=Level.TRACE_INT)
+			if(Level.TRACE.compareTo(level)<=0)
 				return a.fg(Color.CYAN);
-			if(n<=Level.DEBUG_INT)
+			if(Level.DEBUG.compareTo(level)<=0)
 				return a.fgBright(Color.CYAN);
-			if(n<=Level.INFO_INT)
+			if(Level.INFO.compareTo(level)<=0)
 				return a.fgBright(Color.WHITE);
-			if(n<=Level.WARN_INT)
+			if(Level.WARN.compareTo(level)<=0)
 				return a.fgBright(Color.YELLOW);
-			if(n<=Level.ERROR_INT)
+			if(Level.ERROR.compareTo(level)<=0)
 				return a.fg(Color.RED);
 			return a.fgBright(Color.RED).bold();
 		}
-		@Override public boolean requiresLayout() {
-			return true;
-		}
 
-		@Override public void close() {
-			// NOOP
-		}
 	}
 
 	@ArgParser

@@ -1,5 +1,6 @@
 package ductive.examples.console;
 
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
@@ -25,4 +26,5 @@ public class ConsoleExampleConfig {
 
 	@Bean public HistoryProvider historyProvider() { return new InMemoryHistoryProvider(); }
 	@Bean public static PropertySourcesPlaceholderConfigurer placeHolderConfigurer() { return new PropertySourcesPlaceholderConfigurer(); }
+
 }

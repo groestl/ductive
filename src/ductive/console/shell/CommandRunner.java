@@ -30,6 +30,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.logging.log4j.CloseableThreadContext;
 import org.apache.sshd.server.Command;
 import org.apache.sshd.server.Environment;
 import org.apache.sshd.server.ExitCallback;
@@ -41,7 +42,6 @@ import ductive.console.commands.parser.model.CommandLine;
 import ductive.console.commands.register.CommandContext;
 import ductive.console.commands.register.CommandInvoker;
 import ductive.console.jline.NonInteractiveTerminal;
-import ductive.log.LogContext;
 
 public class CommandRunner implements Command {
 
@@ -73,7 +73,7 @@ public class CommandRunner implements Command {
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				try(LogContext ctx = LogContext.create("remote-exec")) {
+				try(CloseableThreadContext.Instance ctx = CloseableThreadContext.push("remote-exec")) {
 					String user = env.getEnv().get(Environment.ENV_USER);
 					ctx.put("user",user);
 

@@ -29,6 +29,7 @@ import java.io.OutputStream;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import org.apache.logging.log4j.CloseableThreadContext;
 import org.apache.sshd.server.Command;
 import org.apache.sshd.server.Environment;
 import org.apache.sshd.server.ExitCallback;
@@ -38,7 +39,6 @@ import org.slf4j.LoggerFactory;
 import ductive.console.jline.JLineConsoleReader;
 import ductive.console.jline.JLineInteractiveTerminal;
 import ductive.console.sshd.SshTerminal;
-import ductive.log.LogContext;
 
 public class EmbeddedShellRunner implements Command {
 
@@ -86,7 +86,7 @@ public class EmbeddedShellRunner implements Command {
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {
-				try(LogContext ctx = LogContext.create("remote-shell")) {
+				try(CloseableThreadContext.Instance ctx = CloseableThreadContext.push("remote-shell")) {
 					String user = env.getEnv().get(Environment.ENV_USER);
 					ctx.put("user",user);
 
@@ -94,12 +94,11 @@ public class EmbeddedShellRunner implements Command {
 					try {
 						r.setExpandEvents(false);
 						JLineInteractiveTerminal terminal = new JLineInteractiveTerminal(r,DefaultTerminalSettings.INSTANCE);
-		
+
 						shell.execute(terminal,new TerminalUser(user));
 					} finally {
 						r.shutdown();
 					}
-					
 
 					destroy();
 				} catch (Exception e) {

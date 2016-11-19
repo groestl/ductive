@@ -62,11 +62,11 @@ public class EmbeddedGroovyShell implements Shell {
 	@Override
 	public void execute(InteractiveTerminal terminal, TerminalUser user) throws IOException {
 		Binding binding = new Binding();
-		
+
 		if(context!=null)
 			for(Entry<String,Object> e : context.entrySet())
 				binding.setVariable(e.getKey(),e.getValue());
-		
+
 
 		CompilerConfiguration config = new CompilerConfiguration();
 		binding.setProperty("out",new PrintStream(terminal.output(),true));
@@ -83,12 +83,12 @@ public class EmbeddedGroovyShell implements Shell {
 
 			while (true) {
 				pending.set(false);
-				
+
 				final String code;
 				try {
 					code = new CodeReader(terminal,pending).read();
 				} catch(UserInterruptException e) {
-					
+
 					continue;
 				}
 
@@ -101,7 +101,7 @@ public class EmbeddedGroovyShell implements Shell {
 					continue;
 
 				try {
-					Object result = interpreter.interpret("true\n" + code); // i don't know why dummy 'true' is required...
+					Object result = interpreter.interpret(code);
 					terminal.println(String.format(resultMarker.toString(),result));
 				} catch (Throwable e) {
 					// Unroll invoker exceptions
@@ -138,7 +138,7 @@ public class EmbeddedGroovyShell implements Shell {
 				pending = terminal.readLine();
 				if (pending == null)
 					return null;
-				
+
 				// TODO: command handling
 				// String command = pending.trim();
 

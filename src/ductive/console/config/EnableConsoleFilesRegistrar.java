@@ -30,12 +30,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
 
@@ -118,11 +119,12 @@ public class EnableConsoleFilesRegistrar implements ImportBeanDefinitionRegistra
 
 			StrSubstitutor s = new StrSubstitutor(model,varPrefix,varPostfix);
 			String content = s.replace(template);
-			write(Paths.get(path),content,PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString(permissions)));
+			write(Paths.get(path),content,PosixFilePermissions.fromString(permissions));
 		}
 
-		private void write(Path path, String content, FileAttribute<?> ... attrs) throws IOException {
-			try(SeekableByteChannel c = Files.newByteChannel(path,Sets.newHashSet(StandardOpenOption.CREATE,StandardOpenOption.TRUNCATE_EXISTING,StandardOpenOption.WRITE),attrs)) {
+		private void write(Path path, String content, Set<PosixFilePermission> perms) throws IOException {
+			try(SeekableByteChannel c = Files.newByteChannel(path,Sets.newHashSet(StandardOpenOption.CREATE,StandardOpenOption.TRUNCATE_EXISTING,StandardOpenOption.WRITE),PosixFilePermissions.asFileAttribute(perms))) {
+				Files.setPosixFilePermissions(path,perms); // make sure permissions are set correctly (even if file was not created just now)
 				c.write(ByteBuffer.wrap(content.getBytes()));
 			}
 		}

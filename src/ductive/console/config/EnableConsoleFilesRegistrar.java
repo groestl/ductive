@@ -73,6 +73,7 @@ public class EnableConsoleFilesRegistrar implements ImportBeanDefinitionRegistra
 			beanDefinition.getPropertyValues().add("permissions",f.getString("permissions"));
 			beanDefinition.getPropertyValues().add("varPrefix",f.getString("varPrefix"));
 			beanDefinition.getPropertyValues().add("varPostfix",f.getString("varPostfix"));
+			beanDefinition.getPropertyValues().add("enable",f.getString("enable"));
 			registry.registerBeanDefinition(BeanDefinitionReaderUtils.generateBeanName(beanDefinition,registry),beanDefinition);
 		}
 	}
@@ -88,9 +89,12 @@ public class EnableConsoleFilesRegistrar implements ImportBeanDefinitionRegistra
 		private String permissions = "rw-r-----";
 		private String varPrefix = "{{";
 		private String varPostfix = "}}";
+		private boolean enable=true;
 
 		@PostConstruct
 		public void init() throws IOException {
+			if(!enable)
+				return;
 			checkNotNull(path);
 			checkNotNull(template);
 
@@ -141,6 +145,10 @@ public class EnableConsoleFilesRegistrar implements ImportBeanDefinitionRegistra
 
 		public void setVarPostfix(String varPostfix) {
 			this.varPostfix = varPostfix;
+		}
+
+		public void setEnable(boolean enable) {
+			this.enable = enable;
 		}
 
 	}

@@ -23,6 +23,8 @@ public @interface EnableConsole {
 
 	String hostKeyFile() default "hostkey.ser";
 
+	String hostKeyPermissions() default "rw-------";
+
 
 	// bean references
 

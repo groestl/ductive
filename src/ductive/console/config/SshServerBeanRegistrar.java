@@ -23,6 +23,7 @@ public class SshServerBeanRegistrar implements ImportBeanDefinitionRegistrar {
 		beanDefinition.getPropertyValues().add("host",attr.getString("host"));
 		beanDefinition.getPropertyValues().add("port",attr.getString("port"));
 		beanDefinition.getPropertyValues().add("hostKeyFile",attr.getString("hostKeyFile"));
+		beanDefinition.getPropertyValues().add("hostKeyPermissions",attr.getString("hostKeyPermissions"));
 
 		String userAuthFactoryBeanName = attr.getString("userAuthFactoryProvider");
 		if(!StringUtils.isBlank(userAuthFactoryBeanName))

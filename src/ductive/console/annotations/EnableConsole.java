@@ -25,6 +25,8 @@ public @interface EnableConsole {
 
 	String hostKeyPermissions() default "rw-------";
 
+	String standardPrompt() default "app> ";
+
 
 	// bean references
 

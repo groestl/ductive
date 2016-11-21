@@ -19,36 +19,21 @@
 	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 	SOFTWARE.
  */
-package ductive.console.shell;
-
-import javax.inject.Provider;
-
-import jline.console.completer.Completer;
+package ductive.console.config;
 
 import org.fusesource.jansi.Ansi;
 
-public class StaticShellSettings implements ShellSettings {
+public class DefaultStandardPromptProvider implements StandardPromptProvider {
 
-	private Provider<Ansi> prompt;
-	private Completer completer;
-	private ShellHistory history;
+	private Ansi prompt;
 
-	public StaticShellSettings(Provider<Ansi> prompt, Completer completer, ShellHistory history) {
-		this.prompt = prompt;
-		this.completer = completer;
-		this.history = history;
-	}
-
-	@Override public Completer completer() {
-		return completer;
-	}
-
-	@Override public Provider<Ansi> prompt() {
+	@Override
+	public Ansi get() {
 		return prompt;
 	}
 
-	@Override public ShellHistory history() {
-		return history;
+	public void setPrompt(Ansi prompt) {
+		this.prompt = prompt;
 	}
 
 }

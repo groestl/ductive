@@ -74,7 +74,8 @@ public class DefaultConsoleConfig {
 			final CommandRegistry commandRegistry,
 			ArgParserRegistry argParserRegistry,
 			ConversionService conversionService,
-			HistoryProvider historyProvider
+			HistoryProvider historyProvider,
+			StandardPromptProvider standardPromptProvider
 		) throws IOException {
 
 
@@ -99,6 +100,7 @@ public class DefaultConsoleConfig {
 		appShell.setCmdParserProvider(cmdParserProvider);
 		appShell.setCommandInvoker(commandInvoker);
 		appShell.setHistoryProvider(historyProvider);
+		appShell.setStandardPromptProvider(standardPromptProvider);
 
 
 		DefaultShellFactory shellFactory = new DefaultShellFactory();

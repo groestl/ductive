@@ -36,6 +36,7 @@ import ductive.console.commands.parser.CmdParser;
 import ductive.console.commands.parser.model.CommandLine;
 import ductive.console.commands.register.CommandContext;
 import ductive.console.commands.register.CommandInvoker;
+import ductive.console.config.StandardPromptProvider;
 import ductive.parse.errors.NoMatchException;
 import jline.console.UserInterruptException;
 
@@ -45,17 +46,20 @@ public class EmbeddedAppShell implements Shell {
 
 	private static final String HISTORY_KEY = Names.from(EmbeddedAppShell.class,"history");
 
-	private Ansi standardPrompt = DEFAULT_STANDARD_PROMPT;
-
 	private CommandInvoker commandInvoker;
 	private HistoryProvider historyProvider;
 	private Provider<CmdParser> cmdParserProvider;
+	private StandardPromptProvider standardPromptProvider = new StandardPromptProvider() {
+		@Override public Ansi get() {
+			return DEFAULT_STANDARD_PROMPT;
+		}
+	};
 
 	@Override
 	public void execute(InteractiveTerminal terminal, TerminalUser user) throws IOException {
 		CmdParser cmdParser = cmdParserProvider.get();
 		try( ShellHistory history = historyProvider.history(HISTORY_KEY) ) {
-			ShellSettings settings = new StaticShellSettings(standardPrompt,cmdParser,history);
+			ShellSettings settings = new StaticShellSettings(standardPromptProvider,cmdParser,history);
 			terminal.updateSettings(settings);
 
 			while (true) {
@@ -70,13 +74,13 @@ public class EmbeddedAppShell implements Shell {
 		try {
 			try {
 				String command = terminal.readLine();
-				
+
 				if (command == null)
 					return 0;
 
 				if (StringUtils.isBlank(command))
 					return null;
-				
+
 				CommandLine line = cmdParser.parse(command);
 				//terminal.println(line.toString());
 				commandInvoker.execute(new CommandContext(terminal,user),line);
@@ -107,6 +111,10 @@ public class EmbeddedAppShell implements Shell {
 
 	public void setHistoryProvider(HistoryProvider historyProvider) {
 		this.historyProvider = historyProvider;
+	}
+
+	public void setStandardPromptProvider(StandardPromptProvider standardPromptProvider) {
+		this.standardPromptProvider = standardPromptProvider;
 	}
 
 }

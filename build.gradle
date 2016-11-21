@@ -123,20 +123,3 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 artifacts {
 	archives sourcesJar
 }
-
-uploadArchives {
-	repositories {
-		flatDir {
-			dirs 'repos'
-		}
-		mavenDeployer {
-			repository(url: "http://nexus.in.code.fm/nexus/content/repositories/releases") {
-				authentication(userName: "admin", password: "admin123")
-			}
-			pom.version = project.version
-			pom.artifactId = "ductive"
-			pom.groupId = "ductive"
-		}
-	}
-}
-

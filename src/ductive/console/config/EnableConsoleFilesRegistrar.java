@@ -73,7 +73,7 @@ public class EnableConsoleFilesRegistrar implements ImportBeanDefinitionRegistra
 			beanDefinition.getPropertyValues().add("permissions",f.getString("permissions"));
 			beanDefinition.getPropertyValues().add("varPrefix",f.getString("varPrefix"));
 			beanDefinition.getPropertyValues().add("varPostfix",f.getString("varPostfix"));
-			beanDefinition.getPropertyValues().add("enabled",f.getBoolean("enabled"));
+			beanDefinition.getPropertyValues().add("enabled",f.getString("enabled"));
 			registry.registerBeanDefinition(BeanDefinitionReaderUtils.generateBeanName(beanDefinition,registry),beanDefinition);
 		}
 	}

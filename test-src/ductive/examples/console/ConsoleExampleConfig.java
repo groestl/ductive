@@ -15,7 +15,13 @@ import ductive.console.shell.HistoryProvider;
 import ductive.console.shell.InMemoryHistoryProvider;
 
 @PropertySource("classpath:ductive/examples/console/console.properties")
-@EnableConsole(host="${example_console.host}",port="${example_console.port}",hostKeyFile="${example_console.host_key_file}")
+@EnableConsole(
+		host="${example_console.host}",
+		port="${example_console.port}",
+		standardPrompt="${example_console.prompt}",
+		standardPromptColor="${example_console.prompt_color}",
+		hostKeyFile="${example_console.host_key_file}"
+)
 @EnableConsoleFiles({
 	@ConsoleFile(path="${example_console.shell_path}",template=ConsoleFileTemplates.shell,permissions="rwxr-x---"),
 	@ConsoleFile(path="${example_console.portfile_path}",template=ConsoleFileTemplates.port),

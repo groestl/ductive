@@ -22,18 +22,24 @@
 package ductive.console.config;
 
 import org.fusesource.jansi.Ansi;
+import org.fusesource.jansi.Ansi.Color;
 
 public class DefaultStandardPromptProvider implements StandardPromptProvider {
 
-	private Ansi prompt;
+	private String prompt;
+	private Color color;
 
 	@Override
 	public Ansi get() {
-		return prompt;
+		return new Ansi().reset().bold().fg(color).a(prompt).reset();
 	}
 
-	public void setPrompt(Ansi prompt) {
+	public void setPrompt(String prompt) {
 		this.prompt = prompt;
+	}
+
+	public void setColor(Color color) {
+		this.color = color;
 	}
 
 }

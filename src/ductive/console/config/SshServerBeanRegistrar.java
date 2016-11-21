@@ -22,8 +22,6 @@
 package ductive.console.config;
 
 import org.apache.commons.lang3.StringUtils;
-import org.fusesource.jansi.Ansi;
-import org.fusesource.jansi.Ansi.Color;
 import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.RootBeanDefinition;
@@ -68,7 +66,8 @@ public class SshServerBeanRegistrar implements ImportBeanDefinitionRegistrar {
 		{
 			RootBeanDefinition beanDefinition = new RootBeanDefinition(DefaultStandardPromptProvider.class);
 			beanDefinition.setSource(null);
-			beanDefinition.getPropertyValues().add("prompt",new Ansi().reset().bold().fg(Color.MAGENTA).a(attr.getString("standardPrompt")).reset());
+			beanDefinition.getPropertyValues().add("prompt",attr.getString("standardPrompt"));
+			beanDefinition.getPropertyValues().add("color",attr.getString("standardPromptColor"));
 
 			registry.registerBeanDefinition(STANDARD_PROMPT_PROVIDER_BEAN_NAME,beanDefinition);
 		}

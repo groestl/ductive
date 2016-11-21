@@ -27,6 +27,8 @@ public @interface EnableConsole {
 
 	String standardPrompt() default "app> ";
 
+	String standardPromptColor() default "MAGENTA";
+
 
 	// bean references
 

@@ -37,6 +37,6 @@ public @interface ConsoleFile {
 	String permissions() default "rw-r-----";
 	String varPrefix() default "{{";
 	String varPostfix() default "}}";
-	boolean enable() default true;
+	String enabled() default "true";
 
 }

@@ -103,6 +103,9 @@ public class CommandInvoker {
 
 			Validate.isTrue(aidx==paramTypes.length);
 
+			// http://stackoverflow.com/questions/2659517/access-exception-when-invoking-method-of-an-anonymous-class-using-java-reflectio
+			target.method.setAccessible(true);
+			
 			return ReflectionUtils.invokeMethod(target.method,target.bean,args);
 		} catch(Exception e) {
 			throw Throwables.propagate(e);

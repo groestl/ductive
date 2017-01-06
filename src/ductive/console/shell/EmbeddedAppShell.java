@@ -71,22 +71,24 @@ public class EmbeddedAppShell implements Shell {
 	}
 
 	private Integer execute(CmdParser cmdParser, InteractiveTerminal terminal, ShellHistory history, TerminalUser user) throws IOException {
+		final CommandLine line;
 		try {
-			try {
-				String command = terminal.readLine();
+			String command = terminal.readLine();
 
-				if (command == null)
-					return 0;
+			if (command == null)
+				return 0;
 
-				if (StringUtils.isBlank(command))
-					return null;
+			if (StringUtils.isBlank(command))
+				return null;
 
-				CommandLine line = cmdParser.parse(command);
-				//terminal.println(line.toString());
-				commandInvoker.execute(new CommandContext(terminal,user),line);
-			} catch(NoMatchException e) {
-				terminal.errorln(e.getMessage());
-			}
+			line = cmdParser.parse(command);
+		} catch(NoMatchException e) {
+			terminal.errorln(e.getMessage());
+			return null;
+		}
+
+		try {
+			commandInvoker.execute(new CommandContext(terminal,user),line);
 		} catch(UserInterruptException e) {
 		} catch (Throwable e) {
 			// Unroll invoker exceptions
